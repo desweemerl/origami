@@ -18,8 +18,7 @@ defmodule Origami.Parser.Js.StoreVar do
             new_token =
               Token.new(
                 :store_var,
-                start: Buffer.position(buffer),
-                stop: Buffer.position(new_buffer),
+                interval: Buffer.interval(buffer, new_buffer),
                 error: Error.new("Missing identifier")
               )
 
@@ -33,8 +32,7 @@ defmodule Origami.Parser.Js.StoreVar do
             new_token =
               Token.new(
                 :store_var,
-                start: Buffer.position(buffer),
-                stop: Buffer.position(identifier_buffer),
+                interval: Buffer.interval(buffer, identifier_buffer),
                 name: name
               )
 

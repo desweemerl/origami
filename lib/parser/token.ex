@@ -1,7 +1,7 @@
 defmodule Origami.Parser.Token do
   alias __MODULE__
 
-  alias Origami.Parser.{Error, Position}
+  alias Origami.Parser.{Error, Interval}
 
   @type t :: %Token{
           type: atom,
@@ -9,8 +9,7 @@ defmodule Origami.Parser.Token do
           category: atom,
           arguments: list,
           content: String.t(),
-          start: Position.t(),
-          stop: Position.t(),
+          interval: Interval.t(),
           children: list,
           error: Error.t()
         }
@@ -22,8 +21,7 @@ defmodule Origami.Parser.Token do
     :category,
     :arguments,
     :content,
-    :start,
-    :stop,
+    :interval,
     :children,
     :error
   ]
@@ -35,8 +33,7 @@ defmodule Origami.Parser.Token do
       category: Keyword.get(config, :category),
       arguments: Keyword.get(config, :arguments, []),
       content: Keyword.get(config, :content, ""),
-      start: Keyword.get(config, :start),
-      stop: Keyword.get(config, :stop),
+      interval: Keyword.get(config, :interval),
       children: Keyword.get(config, :children, []),
       error: Keyword.get(config, :error)
     }

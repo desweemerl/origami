@@ -2,16 +2,21 @@ defmodule Origami.Parser.Js.NumberTest do
   use ExUnit.Case
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Js, Position, Token}
+  alias Origami.Parser.{Error, Interval, Js, Position, Token}
 
   defp build_token(number, category, error \\ nil) do
+    interval =
+      Interval.new(
+        Position.new(0, 0),
+        Position.new(0, String.length(number) - 1)
+      )
+
     Token.new(
       :number,
       content: String.replace(number, " ", ""),
       category: category,
       error: error,
-      start: Position.new(0, 0),
-      stop: Position.new(0, String.length(number) - 1)
+      interval: interval
     )
   end
 

@@ -32,8 +32,7 @@ defmodule Origami.Parser.Js.Keyword do
         new_token =
           Token.new(
             :keyword,
-            start: Buffer.position(buffer),
-            stop: Buffer.position(new_buffer),
+            interval: Buffer.interval(buffer, new_buffer),
             name: chars
           )
 

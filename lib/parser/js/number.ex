@@ -121,16 +121,13 @@ defmodule Origami.Parser.Js.Number do
         :nomatch
 
       {new_buffer, number, category, error} ->
-        interval = Buffer.interval(buffer, new_buffer)
-
         new_token =
           Token.new(
             :number,
-            [
-              content: number,
-              error: error,
-              category: category
-            ] ++ interval
+            content: number,
+            error: error,
+            category: category,
+            interval: Buffer.interval(buffer, new_buffer)
           )
 
         {

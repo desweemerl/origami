@@ -25,8 +25,7 @@ defmodule Origami.Parser.Js.String do
         new_token =
           Token.new(
             :string,
-            start: Buffer.position(buffer),
-            stop: Buffer.position(new_buffer),
+            interval: Buffer.interval(buffer, new_buffer),
             error: Error.new("Unmatching #{delimiter}")
           )
 
@@ -40,8 +39,7 @@ defmodule Origami.Parser.Js.String do
         new_token =
           Token.new(
             :string,
-            start: Buffer.position(buffer),
-            stop: Buffer.position(new_buffer),
+            interval: Buffer.interval(buffer, new_buffer),
             content: String.slice(content, 0, String.length(content) - 1)
           )
 

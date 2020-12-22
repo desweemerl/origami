@@ -73,24 +73,25 @@ defmodule Origami.Parser.Js.Group do
   def get_group(buffer, enforced_category \\ nil) do
     char = Buffer.get_char(buffer)
     category = bracket_type(char)
-    position = Buffer.position(buffer)
 
     cond do
       not open_group?(char) and not is_nil(enforced_category) and category != enforced_category ->
+        position = Buffer.position(buffer)
+        new_buffer = Buffer.consume_char(buffer)
+
         token =
           Token.new(
             :group,
-            start: position,
+            interval: Buffer.interval(buffer, new_buffer),
             error: Error.new("Unexpected token #{char} at #{position}")
           )
 
-        {Buffer.consume_char(buffer), token}
+        {new_buffer, token}
 
       open_group?(char) ->
         token =
           Token.new(
             :group,
-            start: position,
             category: category
           )
 
@@ -98,7 +99,7 @@ defmodule Origami.Parser.Js.Group do
           process_children(Buffer.consume_char(buffer), token)
           |> process_last_child()
 
-        {new_buffer, %Token{new_token | stop: Buffer.position(new_buffer)}}
+        {new_buffer, %Token{new_token | interval: Buffer.interval(buffer, new_buffer)}}
 
       true ->
         :nomatch
@@ -149,8 +150,7 @@ defmodule Origami.Parser.Js.CloseGroup do
         group_token =
           Token.new(
             :group_close,
-            start: Buffer.position(buffer),
-            stop: Buffer.position(new_buffer),
+            interval: Buffer.interval(buffer, new_buffer),
             category: bracket_type(char)
           )
 

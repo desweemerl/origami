@@ -2,7 +2,7 @@ defmodule Origami.Parser.Buffer do
   @moduledoc false
 
   alias __MODULE__
-  alias Origami.Parser.Position
+  alias Origami.Parser.{Interval, Position}
 
   @defaultBuffer Origami.Parser.BufferText
 
@@ -92,7 +92,7 @@ defmodule Origami.Parser.Buffer do
           )
       end
 
-    [start: start, stop: new_stop]
+    Interval.new(start, new_stop)
   end
 
   def consume_line({mod, buffer}), do: {mod, mod.consume_lines(buffer, 1)}
