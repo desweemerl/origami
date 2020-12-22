@@ -24,3 +24,5 @@ origami-*.tar
 
 /assets/node_modules
 /assets/*log
+
+.*.swp
