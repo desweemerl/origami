@@ -4,7 +4,8 @@ defmodule Origami.Parser.Buffer do
   alias __MODULE__
   alias Origami.Parser.{Interval, Position}
 
-  @defaultBuffer Origami.Parser.BufferText
+  @default_buffer Origami.Parser.BufferText
+  @default_line_return "\n"
 
   @type buffer :: term()
 
@@ -29,7 +30,7 @@ defmodule Origami.Parser.Buffer do
   @callback get_chars(buffer, pos_integer) :: String.t() | nil
 
   def from(source, options) do
-    {mod, buffer_options} = Keyword.pop(options, :type, @defaultBuffer)
+    {mod, buffer_options} = Keyword.pop(options, :type, @default_buffer)
     {mod, mod.init(source, buffer_options)}
   end
 
@@ -71,7 +72,7 @@ defmodule Origami.Parser.Buffer do
           buffer =
             cond do
               lines > 0 ->
-                new_mod.consume_lines(new_buffer, lines)
+                new_mod.consume_lines(old_buffer, lines)
 
               true ->
                 old_buffer
@@ -113,7 +114,7 @@ defmodule Origami.Parser.Buffer do
     {chars, {mod, mod.consume_chars(buffer, String.length(chars))}}
   end
 
-  def chars_until(mod_buffer, chars, options \\ []) do
+def chars_until(mod_buffer, chars, options \\ []) do
     chars_until(mod_buffer, chars, "", options)
   end
 
@@ -129,10 +130,11 @@ defmodule Origami.Parser.Buffer do
           :nomatch ->
             case Keyword.get(options, :scope_line, false) do
               false ->
+                line_return = Keyword.get(options, :line_return, @default_line_return)
                 chars_until(
                   Buffer.consume_line(mod_buffer),
                   chars,
-                  content <> new_content,
+                  content <> new_content <> line_return,
                   options
                 )
 
