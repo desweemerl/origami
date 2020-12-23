@@ -20,7 +20,7 @@ defmodule Origami.Parser.Js.NumberTest do
     )
   end
 
-  test "Check if integer is parsed" do
+  test "check if integer is parsed" do
     number = "12345"
 
     child =
@@ -31,7 +31,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :integer) == child
   end
 
-  test "Check if parsing wrong integer fails" do
+  test "check if parsing wrong integer fails" do
     number = "12345abcde"
 
     %Token{children: [first_child | _]} =
@@ -41,7 +41,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :integer, Error.new("Unexpected token \"a\"")) == first_child
   end
 
-  test "Check if negative integer is parsed (with spaces between minus and digits)" do
+  test "check if negative integer is parsed (with spaces between minus and digits)" do
     number = "-   12345"
 
     child =
@@ -52,7 +52,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :neg_integer) == child
   end
 
-  test "Check if float is parsed" do
+  test "check if float is parsed" do
     number = "12345.123"
 
     child =
@@ -63,7 +63,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :float) == child
   end
 
-  test "Check if float is parsed (with spaces between minus and digits)" do
+  test "check if float is parsed (with spaces between minus and digits)" do
     number = "-    12345.123"
 
     child =
@@ -74,7 +74,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :neg_float) == child
   end
 
-  test "Check if float beginning with separator is parsed" do
+  test "check if float beginning with separator is parsed" do
     number = ".123"
 
     child =
@@ -85,7 +85,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :float) == child
   end
 
-  test "Check if float beginning with 2 separators generates error" do
+  test "check if float beginning with 2 separators generates error" do
     number = "..123"
 
     %Token{children: [first_child | _]} =
@@ -95,7 +95,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :float, Error.new("Unexpected token \".\"")) == first_child
   end
 
-  test "Check if hexadecimal is parsed (uppercases)" do
+  test "check if hexadecimal is parsed (uppercases)" do
     number = "0X0123456789ABCDEF"
 
     child =
@@ -106,7 +106,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :hexadecimal) == child
   end
 
-  test "Check if negative hexadecimal is parsed" do
+  test "check if negative hexadecimal is parsed" do
     number = "-0x0123456789ABCDEF"
 
     child =
@@ -117,7 +117,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :neg_hexadecimal) == child
   end
 
-  test "Check if hexadecimal is parsed (lowercases)" do
+  test "check if hexadecimal is parsed (lowercases)" do
     number = "0x0123456789abcdef"
 
     child =
@@ -128,7 +128,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :hexadecimal) == child
   end
 
-  test "Check if binary is parsed" do
+  test "check if binary is parsed" do
     number = "0b11010101"
 
     child =
@@ -139,7 +139,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :binary) == child
   end
 
-  test "Check if negative binary is parsed" do
+  test "check if negative binary is parsed" do
     number = "-0b11010101"
 
     child =
