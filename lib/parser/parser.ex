@@ -1,16 +1,3 @@
-defprotocol Origami.Parser.Match do
-  alias Origami.Parser
-
-  @type t() :: :match | :nomatch
-
-  @spec to_match(t) :: t()
-  def to_match(value)
-end
-
-defimpl Origami.Parser.Match, for: Atom do
-  def to_match(value), do: if(value, do: :match, else: :nomatch)
-end
-
 defmodule Origami.Parser do
   alias Origami.Parser.{Buffer, Token}
 
