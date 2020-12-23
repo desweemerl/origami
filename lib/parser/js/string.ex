@@ -18,7 +18,7 @@ defmodule Origami.Parser.Js.String do
   end
 
   defp content(buffer, token, delimiter) do
-    case IO.inspect(Buffer.chars_until(buffer, delimiter, scope_line: true)) do
+    case Buffer.chars_until(buffer, delimiter, scope_line: true) do
       :nomatch ->
         new_buffer = Buffer.consume_lines(buffer, -1)
 

@@ -6,7 +6,6 @@ defmodule Origami.InteractionChannel do
   end
 
   def handle_in("ping", attrs, socket) do
-    IO.inspect(attrs)
     {:reply, {:ok, attrs}, socket}
   end
 end

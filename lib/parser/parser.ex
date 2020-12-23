@@ -23,7 +23,7 @@ defmodule Origami.Parser do
     buffer = Buffer.from(source, options)
     parsers = Keyword.get(options, :parsers, [])
 
-    IO.inspect(parse_buffer(parsers, buffer, Token.new(:root)))
+    parse_buffer(parsers, buffer, Token.new(:root))
   end
 
   def parse_buffer(parsers, buffer, token) do
