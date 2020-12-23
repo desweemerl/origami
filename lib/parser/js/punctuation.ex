@@ -16,15 +16,13 @@ defmodule Origami.Parser.Js.Punctuation do
 
   @impl Parser
   def consume(buffer, token) do
-    case buffer
-         |> Buffer.get_char()
-         |> punctuation_type() do
+    {char, new_buffer} = Buffer.get_char(buffer)
+
+    case punctuation_type(char) do
       :unknown ->
         :nomatch
 
       type ->
-        new_buffer = Buffer.consume_char(buffer)
-
         new_token =
           Token.new(
             :punctuation,

@@ -9,9 +9,11 @@ defmodule Origami.Parser.Js.Identifier do
   defp char?(<<c>>), do: first_char?(<<c>>) || c in ?0..?9
 
   defp get_identifier(buffer, "") do
+    {char, new_buffer} = Buffer.get_char(buffer)
+
     cond do
-      (char = Buffer.get_char(buffer)) != "" && first_char?(char) ->
-        get_identifier(Buffer.consume_char(buffer), char)
+      char != "" && first_char?(char) ->
+        get_identifier(new_buffer, char)
 
       true ->
         {buffer, ""}
@@ -19,9 +21,11 @@ defmodule Origami.Parser.Js.Identifier do
   end
 
   defp get_identifier(buffer, identifier) do
+    {char, new_buffer} = Buffer.get_char(buffer)
+
     cond do
-      (char = Buffer.get_char(buffer)) != "" && char?(char) ->
-        get_identifier(Buffer.consume_char(buffer), identifier <> char)
+      char != "" && char?(char) ->
+        get_identifier(new_buffer, identifier <> char)
 
       true ->
         {buffer, identifier}

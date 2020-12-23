@@ -71,13 +71,12 @@ defmodule Origami.Parser.Js.Group do
   end
 
   def get_group(buffer, enforced_category \\ nil) do
-    char = Buffer.get_char(buffer)
+    {char, new_buffer} = Buffer.get_char(buffer)
     category = bracket_type(char)
 
     cond do
       not open_group?(char) and not is_nil(enforced_category) and category != enforced_category ->
         position = Buffer.position(buffer)
-        new_buffer = Buffer.consume_char(buffer)
 
         token =
           Token.new(
@@ -145,7 +144,7 @@ defmodule Origami.Parser.Js.CloseGroup do
          |> Buffer.get_char()
          |> close_group?() do
       true ->
-        {char, new_buffer} = Buffer.next_char(buffer)
+        {char, new_buffer} = Buffer.get_char(buffer)
 
         group_token =
           Token.new(

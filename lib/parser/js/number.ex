@@ -47,8 +47,8 @@ defmodule Origami.Parser.Js.Number do
     {new_buffer, new_number} =
       case Buffer.chars_until(buffer, " ", scope_line: true) do
         :nomatch ->
-          chars = Buffer.get_chars(buffer, -1)
-          {Buffer.consume_chars(buffer, -1), number <> chars}
+          {chars, nomatch_buffer} = Buffer.get_chars(buffer, -1)
+          {nomatch_buffer, number <> chars}
 
         {chars, new_buffer} ->
           {new_buffer, number <> chars}
@@ -63,20 +63,20 @@ defmodule Origami.Parser.Js.Number do
   end
 
   defp get_number(buffer, number, type \\ 0) do
-    char = Buffer.get_char(buffer)
+    {char, new_buffer} = Buffer.get_char(buffer)
 
     cond do
       digit?(char) && ((type &&& @integer) != 0 || (type &&& @float) != 0) ->
-        get_number(Buffer.consume_char(buffer), number <> char, type)
+        get_number(new_buffer, number <> char, type)
 
       hexadecimal?(char) && (type &&& @hexadecimal) != 0 ->
-        get_number(Buffer.consume_char(buffer), number <> char, type)
+        get_number(new_buffer, number <> char, type)
 
       binary?(char) && (type &&& @binary) != 0 ->
-        get_number(Buffer.consume_char(buffer), number <> char, type)
+        get_number(new_buffer, number <> char, type)
 
       digit?(char) && type in [@none, @negative] ->
-        get_number(Buffer.consume_char(buffer), number <> char, type ||| @integer)
+        get_number(new_buffer, number <> char, type ||| @integer)
 
       char == "." ->
         cond do
@@ -84,20 +84,20 @@ defmodule Origami.Parser.Js.Number do
             generate_error(char, buffer, number, type)
 
           true ->
-            get_number(Buffer.consume_char(buffer), number <> char, type ||| @float)
+            get_number(new_buffer, number <> char, type ||| @float)
         end
 
       char == "-" && type == @none ->
-        get_number(Buffer.consume_char(buffer), number <> char, @negative)
+        get_number(new_buffer, number <> char, @negative)
 
       char == " " && type == @negative ->
-        get_number(Buffer.consume_char(buffer), number, type)
+        get_number(new_buffer, number, type)
 
       char in ["x", "X"] && number in ["0", "-0"] ->
-        get_number(Buffer.consume_char(buffer), number <> char, type ||| @hexadecimal)
+        get_number(new_buffer, number <> char, type ||| @hexadecimal)
 
       char in ["b", "B"] && number in ["0", "-0"] ->
-        get_number(Buffer.consume_char(buffer), number <> char, type ||| @binary)
+        get_number(new_buffer, number <> char, type ||| @binary)
 
       !is_nil(char) && char not in [" ", ""] && number <> "" ->
         generate_error(char, buffer, number, type)

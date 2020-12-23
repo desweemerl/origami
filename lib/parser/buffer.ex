@@ -27,7 +27,7 @@ defmodule Origami.Parser.Buffer do
 
   @callback consume_chars(buffer, pos_integer) :: buffer
 
-  @callback get_chars(buffer, pos_integer) :: String.t() | nil
+  @callback get_chars(buffer, pos_integer) :: {String.t(), buffer}
 
   def from(source, options) do
     {mod, buffer_options} = Keyword.pop(options, :type, @default_buffer)
@@ -38,12 +38,14 @@ defmodule Origami.Parser.Buffer do
 
   def end_line?({mod, buffer}), do: mod.end_line?(buffer)
 
-  def get_char({mod, buffer}), do: mod.get_chars(buffer, 1)
+  def get_char(mod_buffer), do: get_chars(mod_buffer, 1)
 
-  def get_chars({mod, buffer}, num_chars),
-    do: mod.get_chars(buffer, num_chars)
+  def get_chars({mod, buffer}, num_chars) do
+    {chars, new_buffer} = mod.get_chars(buffer, num_chars)
+    {chars, {mod, new_buffer}}
+  end
 
-  def consume_char({mod, buffer}), do: {mod, mod.consume_chars(buffer, 1)}
+  def consume_char(mod_buffer), do: consume_chars(mod_buffer, 1)
 
   def consume_chars({mod, buffer}, length) when is_number(length) do
     {mod, mod.consume_chars(buffer, length)}
@@ -79,7 +81,7 @@ defmodule Origami.Parser.Buffer do
             end
 
           new_stop = new_mod.position(buffer)
-          remaining_chars = new_mod.get_chars(buffer, -1)
+          {remaining_chars, _} = new_mod.get_chars(buffer, -1)
 
           Position.new(
             new_stop.line,
@@ -103,15 +105,8 @@ defmodule Origami.Parser.Buffer do
   def current_line({mod, buffer}), do: {mod, mod.current_line(buffer)}
 
   def check_chars({mod, buffer}, chars) do
-    mod.get_chars(buffer, String.length(chars)) == chars
-  end
-
-  def next_char({mod, buffer}), do: next_chars({mod, buffer}, 1)
-
-  def next_chars({mod, buffer}, length) do
-    chars = mod.get_chars(buffer, length)
-
-    {chars, {mod, mod.consume_chars(buffer, String.length(chars))}}
+    {next_chars, _} = mod.get_chars(buffer, String.length(chars))
+    next_chars == chars
   end
 
   def chars_until(mod_buffer, chars, options \\ []) do
@@ -124,7 +119,7 @@ defmodule Origami.Parser.Buffer do
         :nomatch
 
       true ->
-        new_content = mod.get_chars(buffer, -1)
+        {new_content, new_buffer} = mod.get_chars(buffer, -1)
 
         case :binary.match(new_content, chars) do
           :nomatch ->
@@ -133,7 +128,7 @@ defmodule Origami.Parser.Buffer do
                 line_return = Keyword.get(options, :line_return, @default_line_return)
 
                 chars_until(
-                  Buffer.consume_line(mod_buffer),
+                  {mod, new_buffer},
                   chars,
                   content <> new_content <> line_return,
                   options
@@ -145,7 +140,7 @@ defmodule Origami.Parser.Buffer do
 
           {position, _} ->
             l = String.length(chars)
-            {new_content, new_buffer} = Buffer.next_chars(mod_buffer, position + l)
+            {new_content, new_buffer} = Buffer.get_chars(mod_buffer, position + l)
 
             case Keyword.get(options, :exclude_chars, false) do
               true ->
@@ -238,11 +233,11 @@ defmodule Origami.Parser.BufferText do
   end
 
   @impl Buffer
-  def get_chars(%BufferText{content: []}, _), do: ""
+  def get_chars(%BufferText{content: []} = buffer, _), do: {"", buffer}
 
   @impl Buffer
-  def get_chars(%BufferText{content: [chars | _], col: col}, -1) do
-    String.slice(chars, col..-1)
+  def get_chars(%BufferText{content: [chars | _], col: col} = buffer, -1) do
+    {String.slice(chars, col..-1), consume_chars(buffer, -1)}
   end
 
   @impl Buffer
@@ -255,7 +250,7 @@ defmodule Origami.Parser.BufferText do
         get_chars(buffer, -1)
 
       true ->
-        String.slice(chars, col, num_chars)
+        {String.slice(chars, col, num_chars), consume_chars(buffer, num_chars)}
     end
   end
 end

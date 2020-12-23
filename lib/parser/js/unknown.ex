@@ -8,7 +8,7 @@ defmodule Origami.Parser.Js.Unknown do
 
   @impl Parser
   def consume(buffer, token) do
-    {char, new_buffer} = Buffer.next_char(buffer)
+    {char, new_buffer} = Buffer.get_char(buffer)
 
     new_token =
       Token.new(

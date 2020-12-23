@@ -8,9 +8,11 @@ defmodule Origami.Parser.Js.String do
 
   @impl Parser
   def consume(buffer, token) do
+    {char, new_buffer} = Buffer.get_char(buffer)
+
     cond do
-      (char = Buffer.get_char(buffer)) in ["\"", "'"] ->
-        content(Buffer.consume_char(buffer), token, char)
+      char in ["\"", "'"] ->
+        content(new_buffer, token, char)
 
       true ->
         :nomatch

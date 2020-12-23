@@ -10,13 +10,14 @@ defmodule Origami.Parser.Js.Space do
 
   @impl Parser
   def consume(buffer, token) do
-    case Buffer.get_char(buffer)
-         |> space?() do
+    {char, new_buffer} = Buffer.get_char(buffer)
+
+    case space?(char) do
       # Don't generate token for spaces
       true ->
         {
           :cont,
-          Buffer.consume_char(buffer),
+          new_buffer,
           token
         }
 

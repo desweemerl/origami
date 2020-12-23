@@ -14,7 +14,7 @@ defmodule Origami.Parser.Js.Comment do
         {content, new_buffer} =
           buffer
           |> Buffer.consume_chars(2)
-          |> Buffer.next_chars(-1)
+          |> Buffer.get_chars(-1)
 
         new_token =
           Token.new(
