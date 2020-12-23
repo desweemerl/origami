@@ -114,7 +114,7 @@ defmodule Origami.Parser.Buffer do
     {chars, {mod, mod.consume_chars(buffer, String.length(chars))}}
   end
 
-def chars_until(mod_buffer, chars, options \\ []) do
+  def chars_until(mod_buffer, chars, options \\ []) do
     chars_until(mod_buffer, chars, "", options)
   end
 
@@ -131,6 +131,7 @@ def chars_until(mod_buffer, chars, options \\ []) do
             case Keyword.get(options, :scope_line, false) do
               false ->
                 line_return = Keyword.get(options, :line_return, @default_line_return)
+
                 chars_until(
                   Buffer.consume_line(mod_buffer),
                   chars,

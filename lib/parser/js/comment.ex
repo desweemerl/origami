@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.Comment do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Buffer, Position, Token}
+  alias Origami.Parser.{Buffer, Token}
 
   @behaviour Parser
 
