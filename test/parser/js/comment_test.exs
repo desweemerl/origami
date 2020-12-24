@@ -60,7 +60,7 @@ defmodule Origami.Parser.Js.CommentTest do
     assert token == child
   end
 
-  test "check if a unclosed multiline comment generates error" do
+  test "check if parsing a unclosed multiline comment generates error" do
     text = """
     const a = 1 + 1; /* This is a
     multiline

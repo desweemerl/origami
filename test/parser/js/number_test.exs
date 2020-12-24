@@ -85,7 +85,7 @@ defmodule Origami.Parser.Js.NumberTest do
     assert build_token(number, :float) == child
   end
 
-  test "check if float beginning with 2 separators generates error" do
+  test "check if parsing float beginning with 2 separators generates error" do
     number = "..123"
 
     %Token{children: [first_child | _]} =
