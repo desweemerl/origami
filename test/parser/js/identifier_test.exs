@@ -1,0 +1,48 @@
+defmodule Origami.Parser.Js.IdentifierTest do
+  use ExUnit.Case
+
+  alias Origami.Parser
+  alias Origami.Parser.{Error, Interval, Js, Position, Token}
+
+  test "check if identifier with only letters is parsed" do
+    identifier = "aIdentifier"
+
+    child =
+      identifier
+      |> Parser.parse(parsers: Js.parsers())
+      |> Token.last_child()
+
+    token = Token.new(
+      :identifier,
+      name: identifier,
+      interval: Interval.new(
+        Position.new(0, 0),
+        Position.new(0, String.length(identifier) - 1)
+      )
+    )
+
+    assert token == child
+  end
+
+  test "check if parsing an identifier starting with digit fails" do
+    identifier = "1aIdentifier"
+
+    child =
+      identifier
+      |> Parser.parse(parsers: Js.parsers())
+      |> Token.last_child()
+
+    token = Token.new(
+      :number,
+      category: :integer,
+      content: identifier,
+      interval: Interval.new(
+        Position.new(0, 0),
+        Position.new(0, String.length(identifier) - 1)
+      ),
+      error: Error.new("Unexpected token \"a\"")
+    )
+
+    assert token == child
+  end
+end
