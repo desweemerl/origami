@@ -64,15 +64,7 @@ defmodule Origami.Parser do
   defp rearrange_next(tokens, []), do: tokens
 
   defp rearrange_next(tokens, [rearranger | rearrangers]) do
-    new_tokens =
-      cond do
-        is_function(&rearranger.rearrange/1) ->
-          rearranger.rearrange(tokens)
-
-        true ->
-          tokens
-      end
-
+    new_tokens = rearranger.rearrange(tokens)
     rearrange_next(new_tokens, rearrangers)
   end
 
@@ -81,18 +73,12 @@ defmodule Origami.Parser do
   end
 
   defp parse_next([parser | parsers], buffer, token) do
-    cond do
-      is_function(&parser.consume/2) ->
-        case parser.consume(buffer, token) do
-          :nomatch ->
-            parse_next(parsers, buffer, token)
-
-          result ->
-            result
-        end
-
-      true ->
+    case parser.consume(buffer, token) do
+      :nomatch ->
         parse_next(parsers, buffer, token)
+
+      result ->
+        result
     end
   end
 end
