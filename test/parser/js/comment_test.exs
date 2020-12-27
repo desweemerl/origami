@@ -9,7 +9,7 @@ defmodule Origami.Parser.Js.CommentTest do
 
     child =
       text
-      |> Parser.parse(parsers: Js.parsers())
+      |> Parser.parse(Js)
       |> Token.last_child()
 
     {start, _} = :binary.match(text, "//")
@@ -39,7 +39,7 @@ defmodule Origami.Parser.Js.CommentTest do
 
     child =
       text
-      |> Parser.parse(parsers: Js.parsers())
+      |> Parser.parse(Js)
       |> Token.last_child()
 
     {start, _} = :binary.match(text, "/*")
@@ -69,7 +69,7 @@ defmodule Origami.Parser.Js.CommentTest do
 
     child =
       text
-      |> Parser.parse(parsers: Js.parsers())
+      |> Parser.parse(Js)
       |> Token.last_child()
 
     {start, _} = :binary.match(text, "/*")

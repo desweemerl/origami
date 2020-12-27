@@ -9,17 +9,19 @@ defmodule Origami.Parser.Js.IdentifierTest do
 
     child =
       identifier
-      |> Parser.parse(parsers: Js.parsers())
+      |> Parser.parse(Js)
       |> Token.last_child()
 
-    token = Token.new(
-      :identifier,
-      name: identifier,
-      interval: Interval.new(
-        Position.new(0, 0),
-        Position.new(0, String.length(identifier) - 1)
+    token =
+      Token.new(
+        :identifier,
+        name: identifier,
+        interval:
+          Interval.new(
+            Position.new(0, 0),
+            Position.new(0, String.length(identifier) - 1)
+          )
       )
-    )
 
     assert token == child
   end
@@ -29,19 +31,20 @@ defmodule Origami.Parser.Js.IdentifierTest do
 
     child =
       identifier
-      |> Parser.parse(parsers: Js.parsers())
+      |> Parser.parse(Js)
       |> Token.last_child()
 
-    token = Token.new(
-      :number,
-      category: :integer,
-      content: identifier,
-      interval: Interval.new(
-        Position.new(0, 0),
-        Position.new(0, String.length(identifier) - 1)
-      ),
-      error: Error.new("Unexpected token \"a\"")
-    )
+    token =
+      Token.new(
+        :identifier,
+        name: "aIdentifier",
+        error: Error.new("Unexpected token"),
+        interval:
+          Interval.new(
+            Position.new(0, 1),
+            Position.new(0, String.length(identifier) - 1)
+          )
+      )
 
     assert token == child
   end
