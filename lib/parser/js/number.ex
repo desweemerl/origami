@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.Number do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Buffer, Error, Token}
+  alias Origami.Parser.{Buffer, Error, Js, Token}
 
   use Bitwise, only_operators: true
 
@@ -99,9 +99,6 @@ defmodule Origami.Parser.Js.Number do
       char in ["b", "B"] && number in ["0", "-0"] ->
         get_number(new_buffer, number <> char, type ||| @binary)
 
-      !is_nil(char) && char not in [" ", ""] && number <> "" ->
-        generate_error(char, buffer, number, type)
-
       true ->
         {
           buffer,
@@ -117,7 +114,7 @@ defmodule Origami.Parser.Js.Number do
   @impl Parser
   def consume(buffer, token) do
     case get_number(buffer) do
-      {_, "", @none, nil} ->
+      {_, "", _, _} ->
         :nomatch
 
       {new_buffer, number, category, error} ->
@@ -137,4 +134,25 @@ defmodule Origami.Parser.Js.Number do
         }
     end
   end
+
+  @impl Parser
+  def rearrange([%Token{type: :number} | [%Token{type: type} | _]] = tokens)
+      when type in [:operator, :punctuation] do
+    tokens
+  end
+
+  @impl Parser
+  def rearrange([%Token{type: :number} = token | next_tokens] = tokens) do
+    cond do
+      Js.glued?(tokens) ->
+        [next_token | remaining_tokens] = next_tokens
+        [token | [%Token{next_token | error: Error.new("Unexpected token")} | remaining_tokens]]
+
+      true ->
+        tokens
+    end
+  end
+
+  @impl Parser
+  def rearrange(tokens), do: tokens
 end

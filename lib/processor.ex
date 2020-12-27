@@ -6,7 +6,7 @@ defmodule Origami.Processor do
   # @var1 = value1 translated as store.set(value1, ['var1'])
   def process_node(file, {"script", _attributes, children_nodes}, document) do
     Enum.at(children_nodes, 0)
-    |> Parser.parse(parsers: Js.parsers())
+    |> Parser.parse(Js)
   end
 
   def process_node(file, {node, attributes, children_nodes}, document) do

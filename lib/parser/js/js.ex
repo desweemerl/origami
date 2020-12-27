@@ -1,6 +1,28 @@
 defmodule Origami.Parser.Js do
   @moduledoc false
 
+  alias Origami.Parser.{Syntax, Token}
+
+  @behaviour Syntax
+
+  @spec glued?(list(Token.t())) :: bool
+  def glued?([]), do: false
+
+  def glued?([_ | []]), do: false
+
+  def glued?([first_token | [next_token | _]]) do
+    first_token.interval.stop.line == next_token.interval.start.line &&
+      first_token.interval.stop.col + 1 == next_token.interval.start.col
+  end
+
+  @impl Syntax
+  def rearrangers() do
+    [
+      Origami.Parser.Js.Number
+    ]
+  end
+
+  @impl Syntax
   def parsers() do
     [
       Origami.Parser.Js.Space,

@@ -1,4 +1,6 @@
 defmodule Origami.Parser.Js.Identifier do
+  @moduledoc false
+
   alias Origami.Parser
   alias Origami.Parser.{Buffer, Token}
   alias Origami.Parser.Js.Keyword
