@@ -140,12 +140,10 @@ defmodule Origami.Parser.Js.CloseGroup do
 
   @impl Parser
   def consume(buffer, tree) do
-    case buffer
-         |> Buffer.get_char()
-         |> close_group?() do
-      true ->
-        {char, new_buffer} = Buffer.get_char(buffer)
+    {char, new_buffer} = Buffer.get_char(buffer)
 
+    case close_group?(char) do
+      true ->
         group_token =
           Token.new(
             :group_close,
