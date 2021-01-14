@@ -10,15 +10,29 @@ defmodule Origami.Parser.Js do
 
   def glued?([_ | []]), do: false
 
-  def glued?([first_token | [next_token | _]]) do
-    first_token.interval.stop.line == next_token.interval.start.line &&
-      first_token.interval.stop.col + 1 == next_token.interval.start.col
+  def glued?([token1 | [token2 | _]]) do
+    token1.interval.stop.line == token2.interval.start.line &&
+      token1.interval.stop.col + 1 == token2.interval.start.col
   end
+
+  def end_line?([]), do: true
+
+  def end_line?([_ | []]), do: true
+
+  def end_line?([%Token{type: :punctuation, category: :semicolon} | []]), do: true
+
+  def end_line?([token1 | [token2 | _i]]) do
+    token1.interval.stop.line + 1 == token2.interval.start.line
+  end
+
+  def end_line?(_), do: false
 
   @impl Syntax
   def rearrangers() do
     [
-      Origami.Parser.Js.Number
+      Origami.Parser.Js.Number,
+      Origami.Parser.Js.Declaration,
+      Origami.Parser.Js.Punctuation
     ]
   end
 
