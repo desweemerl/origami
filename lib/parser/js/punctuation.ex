@@ -37,4 +37,10 @@ defmodule Origami.Parser.Js.Punctuation do
         }
     end
   end
+
+  @impl Parser
+  def rearrange([%Token{type: :punctuation, category: :semicolon} | remaining_tokens]), do: :drop
+
+  @impl Parser
+  def rearrange(tokens), do: tokens
 end
