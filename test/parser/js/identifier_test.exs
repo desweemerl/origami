@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.IdentifierTest do
   use ExUnit.Case
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Interval, Js, Position, Token}
+  alias Origami.Parser.{Error, Interval, Js, Token}
 
   test "check if identifier with only letters is parsed" do
     identifier = "aIdentifier"
