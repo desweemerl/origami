@@ -50,13 +50,19 @@ defmodule Origami.Parser do
   defp rearrange_tokens([], _), do: []
 
   defp rearrange_tokens([first_token | remaining_tokens], rearrangers) do
-    [new_first_token | new_remaining_tokens] =
-      rearrange_next(
-        [rearrange_token(first_token, rearrangers) | remaining_tokens],
-        rearrangers
-      )
+    case rearrange_next(
+           [rearrange_token(first_token, rearrangers) | remaining_tokens],
+           rearrangers
+         ) do
+      :drop ->
+        rearrange_tokens(remaining_tokens, rearrangers)
 
-    [new_first_token | rearrange_tokens(new_remaining_tokens, rearrangers)]
+      [new_first_token | new_remaining_tokens] ->
+        [new_first_token | rearrange_tokens(new_remaining_tokens, rearrangers)]
+
+      others ->
+        others
+    end
   end
 
   defp rearrange_next([], _), do: []
@@ -64,8 +70,14 @@ defmodule Origami.Parser do
   defp rearrange_next(tokens, []), do: tokens
 
   defp rearrange_next(tokens, [rearranger | rearrangers]) do
-    new_tokens = rearranger.rearrange(tokens)
-    rearrange_next(new_tokens, rearrangers)
+    case rearranger.rearrange(tokens) do
+      :drop ->
+        :drop
+
+      new_tokens ->
+        new_tokens = rearranger.rearrange(tokens)
+        rearrange_next(new_tokens, rearrangers)
+    end
   end
 
   defp parse_next([], buffer, _) do
