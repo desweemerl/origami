@@ -1,8 +1,10 @@
 defmodule Origami.Parser.Js.Declaration do
   @moduledoc false
 
-  alias Origami.Parser.Js
+  alias Origami.Parser
   alias Origami.Parser.Token
+
+  @behaviour Parser
 
   defp fetch_declarator([
          %Token{type: :identifier} = identifier_token,
