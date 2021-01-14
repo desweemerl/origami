@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.CommentTest do
   use ExUnit.Case
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Interval, Js, Position, Token}
+  alias Origami.Parser.{Error, Interval, Js, Token}
 
   test "check if a single line comment is parsed" do
     text = "const a = 1 + 1; // This is a comment"
@@ -14,16 +14,10 @@ defmodule Origami.Parser.Js.CommentTest do
 
     {start, _} = :binary.match(text, "//")
 
-    interval =
-      Interval.new(
-        Position.new(0, start),
-        Position.new(0, String.length(text) - 1)
-      )
-
     token =
       Token.new(
         :comment,
-        interval: interval,
+        interval: Interval.new(0, start, 0, String.length(text) - 1),
         content: " This is a comment"
       )
 
@@ -44,16 +38,10 @@ defmodule Origami.Parser.Js.CommentTest do
 
     {start, _} = :binary.match(text, "/*")
 
-    interval =
-      Interval.new(
-        Position.new(0, start),
-        Position.new(2, 9)
-      )
-
     token =
       Token.new(
         :comment_block,
-        interval: interval,
+        interval: Interval.new(0, start, 2, 9),
         content: " This is a\nmultiline\ncomment "
       )
 
@@ -74,16 +62,10 @@ defmodule Origami.Parser.Js.CommentTest do
 
     {start, _} = :binary.match(text, "/*")
 
-    interval =
-      Interval.new(
-        Position.new(0, start),
-        Position.new(3, 0)
-      )
-
     token =
       Token.new(
         :comment_block,
-        interval: interval,
+        interval: Interval.new(0, start, 3, 0),
         error: Error.new("Unmatching comment block starting at 1:#{start + 1}")
       )
 

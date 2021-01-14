@@ -2,21 +2,15 @@ defmodule Origami.Parser.Js.NumberTest do
   use ExUnit.Case
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Interval, Js, Position, Token}
+  alias Origami.Parser.{Error, Interval, Js, Token}
 
   defp build_token(number, category, error \\ nil) do
-    interval =
-      Interval.new(
-        Position.new(0, 0),
-        Position.new(0, String.length(number) - 1)
-      )
-
     Token.new(
       :number,
       content: String.replace(number, " ", ""),
       category: category,
       error: error,
-      interval: interval
+      interval: Interval.new(0, 0, 0, String.length(number) - 1)
     )
   end
 
@@ -34,20 +28,14 @@ defmodule Origami.Parser.Js.NumberTest do
   test "check if parsing wrong integer fails" do
     number = "12345abcde"
 
-    %Token{children: [_ | [last_child]]} =
-      number
-      |> Parser.parse(Js)
+    %Token{children: [_ | [last_child]]} = Parser.parse(number, Js)
 
     token =
       Token.new(
         :identifier,
         name: "abcde",
         error: Error.new("Unexpected token"),
-        interval:
-          Interval.new(
-            Position.new(0, 5),
-            Position.new(0, 9)
-          )
+        interval: Interval.new(0, 5, 0, 9)
       )
 
     assert token == last_child
