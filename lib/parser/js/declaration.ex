@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.Declaration do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.Token
+  alias Origami.Parser.{Interval, Token}
 
   @behaviour Parser
 
@@ -19,34 +19,45 @@ defmodule Origami.Parser.Js.Declaration do
         content: value_token
       )
 
-    {[new_token], remaining_tokens}
+    {[new_token], remaining_tokens, Interval.merge(new_token.interval, value_token.interval)}
   end
 
   defp fetch_declarator([%Token{type: :identifier} = identifier_token | remaining_tokens]) do
-    {[identifier_token], remaining_tokens}
+    {[identifier_token], remaining_tokens, identifier_token.interval}
   end
 
-  defp fetch_declarator([%Token{type: :punctuation, category: :comma} | remaining_tokens]) do
-    {[], remaining_tokens}
+  defp fetch_declarator([
+         %Token{type: :punctuation, category: :comma, interval: interval} | remaining_tokens
+       ]) do
+    {[], remaining_tokens, interval}
   end
 
   defp fetch_declarator(_), do: :nomatch
 
-  defp build_tokens(%Token{children: children} = parent_token, remaining_tokens) do
+  defp build_tokens(
+         %Token{children: children, interval: parent_interval} = parent_token,
+         remaining_tokens
+       ) do
     case fetch_declarator(remaining_tokens) do
       :nomatch ->
         [parent_token | remaining_tokens]
 
-      {identifier_token, next_tokens} ->
-        build_tokens(%Token{parent_token | children: children ++ identifier_token}, next_tokens)
+      {identifier_token, next_tokens, interval} ->
+        build_tokens(
+          %Token{
+            parent_token
+            | children: children ++ identifier_token,
+              interval: Interval.merge(parent_interval, interval)
+          },
+          next_tokens
+        )
     end
   end
 
   @impl Parser
-  def rearrange([%Token{type: :keyword, name: name} | next_tokens])
+  def rearrange([%Token{type: :keyword, name: name, interval: interval} | next_tokens])
       when name in ["let", "const", "var"] do
-    parent_node = Token.new(:variable_declaration, name: name)
-    build_tokens(parent_node, next_tokens)
+    build_tokens(Token.new(:variable_declaration, name: name, interval: interval), next_tokens)
   end
 
   @impl Parser

@@ -17,6 +17,7 @@ defmodule Origami.Parser.Js.DeclarationTest do
       Token.new(
         :variable_declaration,
         name: "var",
+        interval: Interval.new(0, 0, 0, 8),
         children: [
           Token.new(
             :identifier,
@@ -34,6 +35,7 @@ defmodule Origami.Parser.Js.DeclarationTest do
       ),
       Token.new(
         :variable_declaration,
+        interval: Interval.new(1, 0, 1, 8),
         name: "let",
         children: [
           Token.new(
@@ -52,6 +54,7 @@ defmodule Origami.Parser.Js.DeclarationTest do
       ),
       Token.new(
         :variable_declaration,
+        interval: Interval.new(2, 0, 2, 10),
         name: "const",
         children: [
           Token.new(

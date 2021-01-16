@@ -24,11 +24,8 @@ defmodule Origami.Parser.Interval do
   end
 
   @spec merge(Interval.t(), Interval.t()) :: Interval.t()
-  def merge(interval1, interval2) do
-    %Interval{
-      start: interval1.start,
-      stop: interval2.stop
-    }
+  def merge(%Interval{start: start}, %Interval{stop: stop}) do
+    Interval.new(start, stop)
   end
 end
 
