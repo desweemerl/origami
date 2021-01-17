@@ -9,6 +9,7 @@ defmodule Origami.Parser.Js.DeclarationTest do
     var a = 1;
     let b = 1;
     const c = 1;
+    d = 1;
     """
 
     %Token{children: children} = Parser.parse(declaration_let, Js)
@@ -65,6 +66,24 @@ defmodule Origami.Parser.Js.DeclarationTest do
               Token.new(
                 :number,
                 interval: Interval.new(2, 10, 2, 10),
+                category: :integer,
+                content: "1"
+              )
+          )
+        ]
+      ),
+      Token.new(
+        :variable_declaration,
+        interval: Interval.new(3, 0, 3, 4),
+        children: [
+          Token.new(
+            :identifier,
+            interval: Interval.new(3, 0, 3, 0),
+            name: "d",
+            content:
+              Token.new(
+                :number,
+                interval: Interval.new(3, 4, 3, 4),
                 category: :integer,
                 content: "1"
               )
