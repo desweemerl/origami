@@ -17,58 +17,76 @@ defmodule Origami.Parser.Js.DeclarationTest do
     expectation = [
       Token.new(
         :variable_declaration,
-        name: "var",
         interval: Interval.new(0, 0, 0, 8),
+        data: %{
+          name: "var"
+        },
         children: [
           Token.new(
             :identifier,
             interval: Interval.new(0, 4, 0, 4),
-            name: "a",
-            content:
-              Token.new(
-                :number,
-                interval: Interval.new(0, 8, 0, 8),
-                category: :integer,
-                content: "1"
-              )
+            data: %{
+              name: "a",
+              content:
+                Token.new(
+                  :number,
+                  interval: Interval.new(0, 8, 0, 8),
+                  data: %{
+                    category: :integer,
+                    value: "1"
+                  }
+                )
+            }
           )
         ]
       ),
       Token.new(
         :variable_declaration,
         interval: Interval.new(1, 0, 1, 8),
-        name: "let",
+        data: %{
+          name: "let"
+        },
         children: [
           Token.new(
             :identifier,
             interval: Interval.new(1, 4, 1, 4),
-            name: "b",
-            content:
-              Token.new(
-                :number,
-                interval: Interval.new(1, 8, 1, 8),
-                category: :integer,
-                content: "1"
-              )
+            data: %{
+              name: "b",
+              content:
+                Token.new(
+                  :number,
+                  interval: Interval.new(1, 8, 1, 8),
+                  data: %{
+                    category: :integer,
+                    value: "1"
+                  }
+                )
+            }
           )
         ]
       ),
       Token.new(
         :variable_declaration,
         interval: Interval.new(2, 0, 2, 10),
-        name: "const",
+        data: %{
+          name: "const"
+        },
         children: [
           Token.new(
             :identifier,
             interval: Interval.new(2, 6, 2, 6),
-            name: "c",
-            content:
-              Token.new(
-                :number,
-                interval: Interval.new(2, 10, 2, 10),
-                category: :integer,
-                content: "1"
-              )
+            data: %{
+              name: "c",
+              content:
+                Token.new(
+                  :number,
+                  interval: Interval.new(2, 10, 2, 10),
+                  data: %{
+                    category: :integer,
+                    value: "1"
+                  }
+                )
+            }
           )
         ]
       ),
@@ -79,14 +97,18 @@ defmodule Origami.Parser.Js.DeclarationTest do
           Token.new(
             :identifier,
             interval: Interval.new(3, 0, 3, 0),
-            name: "d",
-            content:
-              Token.new(
-                :number,
-                interval: Interval.new(3, 4, 3, 4),
-                category: :integer,
-                content: "1"
-              )
+            data: %{
+              name: "d",
+              content:
+                Token.new(
+                  :number,
+                  interval: Interval.new(3, 4, 3, 4),
+                  data: %{
+                    category: :integer,
+                    value: "1"
+                  }
+                )
+            }
           )
         ]
       )

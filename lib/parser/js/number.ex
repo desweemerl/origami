@@ -121,10 +121,12 @@ defmodule Origami.Parser.Js.Number do
         new_token =
           Token.new(
             :number,
-            content: number,
+            interval: Buffer.interval(buffer, new_buffer),
             error: error,
-            category: category,
-            interval: Buffer.interval(buffer, new_buffer)
+            data: %{
+              value: number,
+              category: category
+            }
           )
 
         {

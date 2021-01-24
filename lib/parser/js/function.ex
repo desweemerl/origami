@@ -39,8 +39,10 @@ defmodule Origami.Parser.Js.Function do
       Token.new(
         :function,
         interval: Buffer.interval(buffer, buffer_body),
-        name: name,
-        arguments: arguments.children,
+        data: %{
+          name: name,
+          arguments: arguments.children
+        },
         children: body.children
       )
 

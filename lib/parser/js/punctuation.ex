@@ -27,7 +27,9 @@ defmodule Origami.Parser.Js.Punctuation do
           Token.new(
             :punctuation,
             interval: Buffer.interval(buffer, new_buffer),
-            category: type
+            data: %{
+              category: type
+            }
           )
 
         {
@@ -39,7 +41,7 @@ defmodule Origami.Parser.Js.Punctuation do
   end
 
   @impl Parser
-  def rearrange([%Token{type: :punctuation, category: :semicolon} | _]), do: :drop
+  def rearrange([%Token{type: :punctuation, data: %{category: :semicolon}} | _]), do: :drop
 
   @impl Parser
   def rearrange(tokens), do: tokens

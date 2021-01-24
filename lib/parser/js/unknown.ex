@@ -6,6 +6,18 @@ defmodule Origami.Parser.Js.Unknown do
 
   @behaviour Parser
 
+  defp merge(%Token{children: children} = token, child_token) do
+    case Enum.reverse(children) do
+      [%Token{type: :unknown, data: %{content: content}} = head | tail] ->
+        new_content = content <> child_token.data.content
+        new_head = head |> Map.put(:data, %{content: new_content})
+        token |> Map.put(:children, Enum.reverse([new_head | tail]))
+
+      _ ->
+        Token.concat(token, child_token)
+    end
+  end
+
   @impl Parser
   def consume(buffer, token) do
     {char, new_buffer} = Buffer.get_char(buffer)
@@ -14,13 +26,15 @@ defmodule Origami.Parser.Js.Unknown do
       Token.new(
         :unknown,
         interval: Buffer.interval(buffer, new_buffer),
-        content: char
+        data: %{
+          content: char
+        }
       )
 
     {
       :cont,
       new_buffer,
-      Token.merge_content(token, new_token)
+      merge(token, new_token)
     }
   end
 end

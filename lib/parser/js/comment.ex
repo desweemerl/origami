@@ -20,7 +20,7 @@ defmodule Origami.Parser.Js.Comment do
           Token.new(
             :comment,
             interval: Buffer.interval(buffer, new_buffer),
-            content: content
+            data: %{content: content}
           )
 
         {
@@ -70,7 +70,9 @@ defmodule Origami.Parser.Js.CommentBlock do
                 Token.new(
                   :comment_block,
                   interval: Buffer.interval(buffer, new_buffer),
-                  content: content
+                  data: %{
+                    content: content
+                  }
                 ),
                 new_buffer
               }

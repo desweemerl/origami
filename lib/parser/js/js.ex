@@ -19,7 +19,7 @@ defmodule Origami.Parser.Js do
 
   def end_line?([_ | []]), do: true
 
-  def end_line?([%Token{type: :punctuation, category: :semicolon} | []]), do: true
+  def end_line?([%Token{type: :punctuation, data: %{category: :semicolon}} | []]), do: true
 
   def end_line?([token1 | [token2 | _i]]) do
     token1.interval.stop.line + 1 == token2.interval.start.line

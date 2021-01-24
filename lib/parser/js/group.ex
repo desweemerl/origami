@@ -58,15 +58,15 @@ defmodule Origami.Parser.Js.Group do
     end
   end
 
-  defp process_children(buffer, %Token{category: :brace} = token) do
+  defp process_children(buffer, %Token{data: %{category: :brace}} = token) do
     Parser.parse_buffer(Js.parsers(), buffer, token)
   end
 
-  defp process_children(buffer, %Token{category: :bracket} = token) do
+  defp process_children(buffer, %Token{data: %{category: :bracket}} = token) do
     Parser.parse_buffer(bracket_parser(), buffer, token)
   end
 
-  defp process_children(buffer, %Token{category: :parenthesis} = token) do
+  defp process_children(buffer, %Token{data: %{category: :parenthesis}} = token) do
     Parser.parse_buffer(bracket_parser(), buffer, token)
   end
 
@@ -91,7 +91,9 @@ defmodule Origami.Parser.Js.Group do
         token =
           Token.new(
             :group,
-            category: category
+            data: %{
+              category: category
+            }
           )
 
         {new_buffer, new_token} =
@@ -148,7 +150,9 @@ defmodule Origami.Parser.Js.CloseGroup do
           Token.new(
             :group_close,
             interval: Buffer.interval(buffer, new_buffer),
-            category: bracket_type(char)
+            data: %{
+              category: bracket_type(char)
+            }
           )
 
         {

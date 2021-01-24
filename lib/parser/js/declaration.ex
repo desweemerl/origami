@@ -2,21 +2,23 @@ defmodule Origami.Parser.Js.Declaration do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Interval, Token}
+  alias Origami.Parser.{Interval, Token}
 
   @behaviour Parser
 
   defp fetch_declarator([
          %Token{type: :identifier} = identifier_token,
-         %Token{type: :operator, content: "="},
+         %Token{type: :operator, data: %{content: "="}},
          value_token | remaining_tokens
        ]) do
     new_token =
       Token.new(
         :identifier,
-        name: identifier_token.name,
         interval: identifier_token.interval,
-        content: value_token
+        data: %{
+          name: identifier_token.data.name,
+          content: value_token
+        }
       )
 
     {[new_token], remaining_tokens, Interval.merge(new_token.interval, value_token.interval)}
@@ -27,7 +29,8 @@ defmodule Origami.Parser.Js.Declaration do
   end
 
   defp fetch_declarator([
-         %Token{type: :punctuation, category: :comma, interval: interval} | remaining_tokens
+         %Token{type: :punctuation, data: %{category: :comma}, interval: interval}
+         | remaining_tokens
        ]) do
     {[], remaining_tokens, interval}
   end
@@ -55,13 +58,18 @@ defmodule Origami.Parser.Js.Declaration do
   end
 
   @impl Parser
-  def rearrange([%Token{type: :keyword, name: name, interval: interval} | next_tokens])
+  def rearrange([%Token{type: :keyword, data: %{name: name}, interval: interval} | next_tokens])
       when name in ["let", "const", "var"] do
-    build_tokens(Token.new(:variable_declaration, name: name, interval: interval), next_tokens)
+    build_tokens(
+      Token.new(:variable_declaration, data: %{name: name}, interval: interval),
+      next_tokens
+    )
   end
 
   @impl Parser
-  def rearrange([%Token{interval: interval}, %Token{type: :operator, content: "="} | _] = tokens) do
+  def rearrange(
+        [%Token{interval: interval}, %Token{type: :operator, data: %{content: "="}} | _] = tokens
+      ) do
     build_tokens(Token.new(:variable_declaration, interval: interval), tokens)
   end
 

@@ -33,7 +33,9 @@ defmodule Origami.Parser.Js.StoreVar do
               Token.new(
                 :store_var,
                 interval: Buffer.interval(buffer, identifier_buffer),
-                name: name
+                data: %{
+                  name: name
+                }
               )
 
             {

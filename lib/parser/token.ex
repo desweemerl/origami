@@ -5,36 +5,27 @@ defmodule Origami.Parser.Token do
 
   @type t :: %Token{
           type: atom,
-          name: String.t(),
-          category: atom,
-          arguments: list,
-          content: String.t(),
           interval: Interval.t(),
           children: list,
+          data: map(),
           error: Error.t()
         }
 
   @enforce_keys [:type]
   defstruct [
     :type,
-    :name,
-    :category,
-    :arguments,
-    :content,
     :interval,
     :children,
+    :data,
     :error
   ]
 
   def new(type, config \\ []) do
     %Token{
       type: type,
-      name: Keyword.get(config, :name, ""),
-      category: Keyword.get(config, :category),
-      arguments: Keyword.get(config, :arguments, []),
-      content: Keyword.get(config, :content, ""),
       interval: Keyword.get(config, :interval),
       children: Keyword.get(config, :children, []),
+      data: Keyword.get(config, :data, %{}),
       error: Keyword.get(config, :error)
     }
   end
@@ -58,24 +49,5 @@ defmodule Origami.Parser.Token do
     [_ | tail] = Enum.reverse(children)
 
     %Token{token | children: Enum.reverse(tail)}
-  end
-
-  def merge_content(%Token{children: []} = token, child_token) do
-    %Token{token | children: [child_token]}
-  end
-
-  def merge_content(
-        %Token{children: children} = token,
-        child_token
-      ) do
-    cond do
-      ([last | tail] = Enum.reverse(children)) and last.type == child_token.type ->
-        new_content = last.content <> child_token.content
-        new_children = Enum.reverse([%Token{last | content: new_content} | tail])
-        %Token{token | children: new_children}
-
-      true ->
-        concat(token, child_token)
-    end
   end
 end

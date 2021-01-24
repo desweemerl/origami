@@ -55,7 +55,9 @@ defmodule Origami.Parser.Js.Identifier do
               Token.new(
                 :identifier,
                 interval: Buffer.interval(buffer, new_buffer),
-                name: identifier
+                data: %{
+                  name: identifier
+                }
               )
 
             {

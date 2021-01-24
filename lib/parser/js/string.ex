@@ -42,7 +42,9 @@ defmodule Origami.Parser.Js.String do
           Token.new(
             :string,
             interval: Buffer.interval(buffer, new_buffer),
-            content: String.slice(content, 0, String.length(content) - 1)
+            data: %{
+              content: String.slice(content, 0, String.length(content) - 1)
+            }
           )
 
         {

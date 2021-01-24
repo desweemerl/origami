@@ -15,8 +15,10 @@ defmodule Origami.Parser.Js.IdentifierTest do
     token =
       Token.new(
         :identifier,
-        name: identifier,
-        interval: Interval.new(0, 0, 0, String.length(identifier) - 1)
+        interval: Interval.new(0, 0, 0, String.length(identifier) - 1),
+        data: %{
+          name: identifier
+        }
       )
 
     assert token == child
@@ -33,9 +35,11 @@ defmodule Origami.Parser.Js.IdentifierTest do
     token =
       Token.new(
         :identifier,
-        name: "aIdentifier",
+        interval: Interval.new(0, 1, 0, String.length(identifier) - 1),
         error: Error.new("Unexpected token"),
-        interval: Interval.new(0, 1, 0, String.length(identifier) - 1)
+        data: %{
+          name: "aIdentifier"
+        }
       )
 
     assert token == child

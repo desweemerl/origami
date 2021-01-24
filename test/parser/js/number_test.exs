@@ -7,10 +7,12 @@ defmodule Origami.Parser.Js.NumberTest do
   defp build_token(number, category, error \\ nil) do
     Token.new(
       :number,
-      content: String.replace(number, " ", ""),
-      category: category,
+      interval: Interval.new(0, 0, 0, String.length(number) - 1),
       error: error,
-      interval: Interval.new(0, 0, 0, String.length(number) - 1)
+      data: %{
+        value: String.replace(number, " ", ""),
+        category: category
+      }
     )
   end
 
@@ -33,9 +35,11 @@ defmodule Origami.Parser.Js.NumberTest do
     token =
       Token.new(
         :identifier,
-        name: "abcde",
+        interval: Interval.new(0, 5, 0, 9),
         error: Error.new("Unexpected token"),
-        interval: Interval.new(0, 5, 0, 9)
+        data: %{
+          name: "abcde"
+        }
       )
 
     assert token == last_child
