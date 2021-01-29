@@ -49,12 +49,12 @@ defmodule Origami.Parser.Js.Group do
 
     cond do
       not is_nil(last_token) and last_token.type == :group_close and
-          last_token.category == token.category ->
+          last_token.data.category == token.data.category ->
         {buffer, Token.skip_last_child(token)}
 
       true ->
         {buffer,
-         %Token{token | error: Error.new("Unmatching bracket for group #{token.category}")}}
+         %Token{token | error: Error.new("Unmatching bracket for group #{token.data.category}")}}
     end
   end
 
