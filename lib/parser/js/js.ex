@@ -31,6 +31,7 @@ defmodule Origami.Parser.Js do
   def rearrangers() do
     [
       Origami.Parser.Js.Number,
+      Origami.Parser.Js.Expression,
       Origami.Parser.Js.Declaration,
       Origami.Parser.Js.Punctuation
     ]
