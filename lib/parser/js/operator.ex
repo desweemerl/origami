@@ -18,7 +18,7 @@ defmodule Origami.Parser.Js.Operator do
 
   @ternary_operators ~w(? :)
 
-  defp operator_type(chars) do
+  defp operator_category(chars) do
     cond do
       chars in @assignment_operators ->
         :assignment
@@ -67,7 +67,7 @@ defmodule Origami.Parser.Js.Operator do
             :operator,
             interval: Buffer.interval(buffer, new_buffer),
             data: %{
-              category: operator_type(chars),
+              category: operator_category(chars),
               content: chars
             }
           )
