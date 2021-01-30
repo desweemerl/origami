@@ -8,7 +8,8 @@ defmodule Origami.MixProject do
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -31,7 +32,8 @@ defmodule Origami.MixProject do
       {:phoenix_pubsub, "~> 2.0.0"},
       {:jason, "~> 1.2.2"},
       {:floki, "~> 0.29.0"},
-      {:file_system, "~> 0.2.9"}
+      {:file_system, "~> 0.2.9"},
+      {:excoveralls, "~> 0.13"}
     ]
   end
 end
