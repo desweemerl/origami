@@ -7,10 +7,8 @@ defmodule Origami.Parser.Js.CommentTest do
   test "check if a single line comment is parsed" do
     text = "const a = 1 + 1; // This is a comment"
 
-    child =
-      text
-      |> Parser.parse(Js)
-      |> Token.last_child()
+    {:ok, token} = Parser.parse(text, Js)
+    child = Token.last_child(token)
 
     {start, _} = :binary.match(text, "//")
 
@@ -33,10 +31,8 @@ defmodule Origami.Parser.Js.CommentTest do
     comment */
     """
 
-    child =
-      text
-      |> Parser.parse(Js)
-      |> Token.last_child()
+    {:ok, token} = Parser.parse(text, Js)
+    child = Token.last_child(token)
 
     {start, _} = :binary.match(text, "/*")
 
@@ -59,20 +55,10 @@ defmodule Origami.Parser.Js.CommentTest do
     comment
     """
 
-    child =
-      text
-      |> Parser.parse(Js)
-      |> Token.last_child()
+    {:error, errors} = Parser.parse(text, Js)
 
     {start, _} = :binary.match(text, "/*")
 
-    token =
-      Token.new(
-        :comment_block,
-        interval: Interval.new(0, start, 3, 0),
-        error: Error.new("Unmatching comment block starting at 1:#{start + 1}")
-      )
-
-    assert token == child
+    assert [Error.new("Unmatching comment block starting at 1:#{start + 1}")] == errors
   end
 end

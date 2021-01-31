@@ -4,44 +4,30 @@ defmodule Origami.Parser.Js.IdentifierTest do
   alias Origami.Parser
   alias Origami.Parser.{Error, Interval, Js, Token}
 
+  defp build_token(identifier) do
+    Token.new(
+      :identifier,
+      interval: Interval.new(0, 0, 0, String.length(identifier) - 1),
+      data: %{
+        name: identifier
+      }
+    )
+  end
+
   test "check if identifier with only letters is parsed" do
     identifier = "aIdentifier"
 
-    child =
-      identifier
-      |> Parser.parse(Js)
-      |> Token.last_child()
+    {:ok, token} = Parser.parse(identifier, Js)
+    child = Token.last_child(token)
 
-    token =
-      Token.new(
-        :identifier,
-        interval: Interval.new(0, 0, 0, String.length(identifier) - 1),
-        data: %{
-          name: identifier
-        }
-      )
-
-    assert token == child
+    assert build_token(identifier) == child
   end
 
   test "check if parsing an identifier starting with digit fails" do
     identifier = "1aIdentifier"
 
-    child =
-      identifier
-      |> Parser.parse(Js)
-      |> Token.last_child()
+    {:error, errors} = Parser.parse(identifier, Js)
 
-    token =
-      Token.new(
-        :identifier,
-        interval: Interval.new(0, 1, 0, String.length(identifier) - 1),
-        error: Error.new("Unexpected token"),
-        data: %{
-          name: "aIdentifier"
-        }
-      )
-
-    assert token == child
+    assert [Error.new("Unexpected token")] == errors
   end
 end

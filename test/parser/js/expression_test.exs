@@ -7,7 +7,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
   test "check if simple binary expression is parsed" do
     expression = "1 + 2 + 3"
 
-    %Token{children: children} = Parser.parse(expression, Js)
+    {:ok, %Token{children: children}} = Parser.parse(expression, Js)
 
     expectation = [
       Token.new(
@@ -60,7 +60,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
   test "check if grouped binary expressions are parsed" do
     expression = "1 + (2 + 3)"
 
-    %Token{children: children} = Parser.parse(expression, Js)
+    {:ok, %Token{children: children}} = Parser.parse(expression, Js)
 
     expectation = [
       Token.new(

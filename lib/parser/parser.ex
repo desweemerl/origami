@@ -8,12 +8,40 @@ defmodule Origami.Parser do
 
   @optional_callbacks consume: 2, rearrange: 1
 
+  defp aggregate_errors(%Token{children: children, error: error}) do
+    errors =
+      case error do
+        nil ->
+          []
+
+        _ ->
+          [error]
+      end
+
+    Enum.flat_map(children, &aggregate_errors/1) ++ errors
+  end
+
+  defp to_result(token) do
+    case aggregate_errors(token) do
+      [] ->
+        {:ok, token}
+
+      errors ->
+        {:error, errors}
+    end
+  end
+
   @spec parse(any, module) :: Token.t()
   def parse(source, syntax, options \\ []) do
     buffer = Buffer.from(source, options)
 
-    parse_buffer(syntax.parsers, buffer, Token.new(:root))
-    |> rearrange_token(syntax.rearrangers)
+    case parse_buffer(syntax.parsers, buffer, Token.new(:root)) |> to_result do
+      {:ok, token} ->
+        rearrange_token(token, syntax.rearrangers) |> to_result
+
+      errors ->
+        errors
+    end
   end
 
   def parse_buffer(parsers, buffer, token) do

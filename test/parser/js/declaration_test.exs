@@ -11,7 +11,7 @@ defmodule Origami.Parser.Js.DeclarationTest do
     const c = 1;
     """
 
-    %Token{children: children} = Parser.parse(declaration_let, Js)
+    {:ok, %Token{children: children}} = Parser.parse(declaration_let, Js)
 
     expectation = [
       Token.new(
