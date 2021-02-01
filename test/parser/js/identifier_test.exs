@@ -28,6 +28,12 @@ defmodule Origami.Parser.Js.IdentifierTest do
 
     {:error, errors} = Parser.parse(identifier, Js)
 
-    assert [Error.new("Unexpected token")] == errors
+    expected_error =
+      Error.new(
+        "Unexpected token",
+        interval: Interval.new(0, 1, 0, 11)
+      )
+
+    assert [expected_error] == errors
   end
 end

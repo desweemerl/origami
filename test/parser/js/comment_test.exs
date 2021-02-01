@@ -59,6 +59,12 @@ defmodule Origami.Parser.Js.CommentTest do
 
     {start, _} = :binary.match(text, "/*")
 
-    assert [Error.new("Unmatching comment block starting at 1:#{start + 1}")] == errors
+    expected_error =
+      Error.new(
+        "Unmatching comment block starting at 1:#{start + 1}",
+        interval: Interval.new(0, 17, 3, 0)
+      )
+
+    assert [expected_error] == errors
   end
 end

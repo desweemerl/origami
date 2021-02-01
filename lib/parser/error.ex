@@ -2,23 +2,23 @@ defmodule Origami.Parser.Error do
   @moduledoc false
 
   alias __MODULE__
-  alias Origami.Parser.Position
+  alias Origami.Parser.Interval
 
-  @enforce_keys [:message, :position]
+  @enforce_keys [:message, :interval]
   defstruct [
     :message,
-    :position
+    :interval
   ]
 
   @type t() :: %Error{
           message: String.t(),
-          position: Position.t()
+          interval: Interval.t()
         }
 
   def new(message, config \\ []) do
     %Error{
       message: message,
-      position: Keyword.get(config, :position)
+      interval: Keyword.get(config, :interval)
     }
   end
 end

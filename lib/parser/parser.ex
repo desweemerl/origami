@@ -1,5 +1,5 @@
 defmodule Origami.Parser do
-  alias Origami.Parser.{Buffer, Token}
+  alias Origami.Parser.{Buffer, Error, Token}
 
   @callback consume(Buffer.t(), Token.t()) ::
               :nomatch | {:cont, Buffer.t(), Token.t()} | {:halt, Buffer.t(), Token.t()}
@@ -8,11 +8,11 @@ defmodule Origami.Parser do
 
   @optional_callbacks consume: 2, rearrange: 1
 
-  defp aggregate_errors(%Token{children: children, data: data}) do
+  defp aggregate_errors(%Token{children: children, interval: interval, data: data}) do
     errors =
       cond do
         Map.has_key?(data, :error) && !is_nil(data.error) ->
-          [data.error]
+          [%Error{data.error | interval: interval}]
 
         true ->
           []

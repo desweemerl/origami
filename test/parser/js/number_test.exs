@@ -29,7 +29,7 @@ defmodule Origami.Parser.Js.NumberTest do
 
     {:error, errors} = Parser.parse(number, Js)
 
-    assert [Error.new("Unexpected token")] == errors
+    assert [Error.new("Unexpected token", interval: Interval.new(0, 5, 0, 9))] == errors
   end
 
   test "check if negative integer is parsed (with spaces between minus and digits)" do
@@ -73,7 +73,7 @@ defmodule Origami.Parser.Js.NumberTest do
 
     {:error, errors} = Parser.parse(number, Js)
 
-    assert [Error.new("Unexpected token \".\"")] == errors
+    assert [Error.new("Unexpected token \".\"", interval: Interval.new(0, 0, 0, 4))] == errors
   end
 
   test "check if hexadecimal is parsed (uppercases)" do
