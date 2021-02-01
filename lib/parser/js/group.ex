@@ -54,7 +54,10 @@ defmodule Origami.Parser.Js.Group do
 
       true ->
         {buffer,
-         %Token{token | error: Error.new("Unmatching bracket for group #{token.data.category}")}}
+         %Token{
+           token
+           | data: %{error: Error.new("Unmatching bracket for group #{token.data.category}")}
+         }}
     end
   end
 
@@ -82,7 +85,9 @@ defmodule Origami.Parser.Js.Group do
           Token.new(
             :group,
             interval: Buffer.interval(buffer, new_buffer),
-            error: Error.new("Unexpected token #{char} at #{position}")
+            data: %{
+              error: Error.new("Unexpected token #{char} at #{position}")
+            }
           )
 
         {new_buffer, token}

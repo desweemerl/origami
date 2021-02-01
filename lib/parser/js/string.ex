@@ -28,7 +28,9 @@ defmodule Origami.Parser.Js.String do
           Token.new(
             :string,
             interval: Buffer.interval(buffer, new_buffer),
-            error: Error.new("Unmatching #{delimiter}")
+            data: %{
+              error: Error.new("Unmatching #{delimiter}")
+            }
           )
 
         {

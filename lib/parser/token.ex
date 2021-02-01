@@ -7,8 +7,7 @@ defmodule Origami.Parser.Token do
           type: atom,
           interval: Interval.t(),
           children: list,
-          data: map(),
-          error: Error.t()
+          data: map()
         }
 
   @enforce_keys [:type]
@@ -16,8 +15,7 @@ defmodule Origami.Parser.Token do
     :type,
     :interval,
     :children,
-    :data,
-    :error
+    :data
   ]
 
   def new(type, config \\ []) do
@@ -25,8 +23,7 @@ defmodule Origami.Parser.Token do
       type: type,
       interval: Keyword.get(config, :interval),
       children: Keyword.get(config, :children, []),
-      data: Keyword.get(config, :data, %{}),
-      error: Keyword.get(config, :error)
+      data: Keyword.get(config, :data, %{})
     }
   end
 

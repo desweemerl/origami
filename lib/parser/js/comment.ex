@@ -60,7 +60,9 @@ defmodule Origami.Parser.Js.CommentBlock do
                 Token.new(
                   :comment_block,
                   interval: Buffer.interval(buffer, remaining_buffer),
-                  error: Error.new("Unmatching comment block starting at #{start}")
+                  data: %{
+                    error: Error.new("Unmatching comment block starting at #{start}")
+                  }
                 ),
                 remaining_buffer
               }
