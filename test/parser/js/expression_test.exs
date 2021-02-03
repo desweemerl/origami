@@ -14,11 +14,13 @@ defmodule Origami.Parser.Js.ExpressionTest do
         :expression,
         interval: Interval.new(0, 0, 0, 8),
         data: %{
+          category: :arithmetic,
           left:
             Token.new(
               :expression,
               interval: Interval.new(0, 0, 0, 4),
               data: %{
+                category: :arithmetic,
                 left:
                   Token.new(
                     :number,
@@ -67,6 +69,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
         :expression,
         interval: Interval.new(0, 0, 0, 10),
         data: %{
+          category: :arithmetic,
           left:
             Token.new(
               :number,
@@ -86,6 +89,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
                   :expression,
                   interval: Interval.new(0, 5, 0, 9),
                   data: %{
+                    category: :arithmetic,
                     left:
                       Token.new(
                         :number,
@@ -110,6 +114,60 @@ defmodule Origami.Parser.Js.ExpressionTest do
               ]
             ),
           operator: "+"
+        }
+      )
+    ]
+
+    assert expectation == children
+  end
+
+  test "check if mixed assignment/arithmeric expression is parsed" do
+    expression = "a += 1 + 2"
+
+    {:ok, %Token{children: children}} = Parser.parse(expression, Js)
+
+    expectation = [
+      Token.new(
+        :expression,
+        interval: Interval.new(0, 0, 0, 9),
+        data: %{
+          category: :assignment,
+          operator: "+=",
+          left:
+            Token.new(
+              :identifier,
+              interval: Interval.new(0, 0, 0, 0),
+              data: %{
+                name: "a"
+              }
+            ),
+          right:
+            Token.new(
+              :expression,
+              interval: Interval.new(0, 5, 0, 9),
+              data: %{
+                category: :arithmetic,
+                left:
+                  Token.new(
+                    :number,
+                    interval: Interval.new(0, 5, 0, 5),
+                    data: %{
+                      category: :integer,
+                      value: "1"
+                    }
+                  ),
+                right:
+                  Token.new(
+                    :number,
+                    interval: Interval.new(0, 9, 0, 9),
+                    data: %{
+                      category: :integer,
+                      value: "2"
+                    }
+                  ),
+                operator: "+"
+              }
+            )
         }
       )
     ]
