@@ -45,8 +45,6 @@ defmodule Origami.Parser.Js.CommentBlock do
 
   @impl Parser
   def consume(buffer, token) do
-    start = Buffer.position(buffer)
-
     case Buffer.check_chars(buffer, "/*") do
       true ->
         {new_token, new_buffer} =
@@ -61,7 +59,7 @@ defmodule Origami.Parser.Js.CommentBlock do
                   :comment_block,
                   interval: Buffer.interval(buffer, remaining_buffer),
                   data: %{
-                    error: Error.new("Unmatching comment block starting at #{start}")
+                    error: Error.new("Unmatching comment block")
                   }
                 ),
                 remaining_buffer

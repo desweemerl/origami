@@ -65,12 +65,12 @@ defmodule Origami.Parser.Buffer do
   def position({mod, buffer}), do: mod.position(buffer)
 
   def interval({old_mod, old_buffer}, {new_mod, new_buffer}) do
-    start = old_mod.position(old_buffer)
-    stop = new_mod.position(new_buffer)
+    {start_line, start_col} = old_mod.position(old_buffer)
+    {stop_line, stop_col} = new_mod.position(new_buffer)
 
     new_stop =
       cond do
-        (lines = stop.line - start.line - 1) >= 0 ->
+        (lines = stop_line - start_line - 1) >= 0 ->
           buffer =
             cond do
               lines > 0 ->
@@ -80,22 +80,22 @@ defmodule Origami.Parser.Buffer do
                 old_buffer
             end
 
-          new_stop = new_mod.position(buffer)
+          {new_stop_line, new_stop_col} = new_mod.position(buffer)
           {remaining_chars, _} = new_mod.get_chars(buffer, -1)
 
           Position.new(
-            new_stop.line,
-            max(0, new_stop.col + String.length(remaining_chars) - 1)
+            new_stop_line,
+            max(0, new_stop_col + String.length(remaining_chars) - 1)
           )
 
         true ->
           Position.new(
-            stop.line,
-            max(0, stop.col - 1)
+            stop_line,
+            max(0, stop_col - 1)
           )
       end
 
-    Interval.new(start, new_stop)
+    Interval.new({start_line, start_col}, new_stop)
   end
 
   def consume_line({mod, buffer}), do: {mod, mod.consume_lines(buffer, 1)}

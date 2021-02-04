@@ -10,9 +10,11 @@ defmodule Origami.Parser.Js do
 
   def glued?([_ | []]), do: false
 
-  def glued?([token1 | [token2 | _]]) do
-    token1.interval.stop.line == token2.interval.start.line &&
-      token1.interval.stop.col + 1 == token2.interval.start.col
+  def glued?([
+        %Token{interval: {_, _, stop_line, stop_col}}
+        | [%Token{interval: {start_line, start_col, _, _}} | _]
+      ]) do
+    stop_line == start_line && stop_col + 1 == start_col
   end
 
   def end_line?([]), do: true
@@ -21,8 +23,10 @@ defmodule Origami.Parser.Js do
 
   def end_line?([%Token{type: :punctuation, data: %{category: :semicolon}} | []]), do: true
 
-  def end_line?([token1 | [token2 | _i]]) do
-    token1.interval.stop.line + 1 == token2.interval.start.line
+  def end_line?([
+        %Token{interval: {_, _, stop_line, _}} | [%Token{interval: {start_line, _, _, _}} | _]
+      ]) do
+    stop_line + 1 == start_line
   end
 
   def end_line?(_), do: false

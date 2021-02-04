@@ -32,7 +32,8 @@ defmodule Origami.Parser.Js.Expression do
         %Token{type: type} = identifier_token,
         %Token{type: :operator, data: %{category: :assignment, content: content}} = operator_token
         | remaining_tokens
-      ] when type in [:store_variable, :identifier] ->
+      ]
+      when type in [:store_variable, :identifier] ->
         {right_token, next_tokens} =
           remaining_tokens |> generate_expression |> get_expression_token
 
