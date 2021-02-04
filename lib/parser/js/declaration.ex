@@ -67,12 +67,5 @@ defmodule Origami.Parser.Js.Declaration do
   end
 
   @impl Parser
-  def rearrange(
-        [%Token{interval: interval}, %Token{type: :operator, data: %{content: "="}} | _] = tokens
-      ) do
-    build_tokens(Token.new(:variable_declaration, interval: interval), tokens)
-  end
-
-  @impl Parser
   def rearrange(tokens), do: tokens
 end

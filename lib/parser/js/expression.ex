@@ -18,7 +18,7 @@ defmodule Origami.Parser.Js.Expression do
 
   defp get_expression_token(tokens) do
     case tokens do
-      [%Token{type: :expression} = head | tail] ->
+      [head | tail] ->
         {head, tail}
 
       _ ->
@@ -29,17 +29,17 @@ defmodule Origami.Parser.Js.Expression do
   defp generate_expression(tokens) do
     case tokens do
       [
-        %Token{type: :identifier} = identifier_token,
-        %Token{type: :operator, data: %{category: :assignment, content: content}}
+        %Token{type: type} = identifier_token,
+        %Token{type: :operator, data: %{category: :assignment, content: content}} = operator_token
         | remaining_tokens
-      ] ->
+      ] when type in [:store_variable, :identifier] ->
         {right_token, next_tokens} =
           remaining_tokens |> generate_expression |> get_expression_token
 
         right_interval =
           case right_token do
             nil ->
-              identifier_token
+              operator_token.interval
 
             _ ->
               right_token.interval
