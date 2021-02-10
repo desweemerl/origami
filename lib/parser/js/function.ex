@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.Function do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Buffer, Token}
+  alias Origami.Parser.{Buffer, Error, Token, Js}
   alias Origami.Parser.Js.{Group, Space, Identifier}
 
   @behaviour Parser
@@ -18,38 +18,116 @@ defmodule Origami.Parser.Js.Function do
     end
   end
 
-  defp parse_function(buffer, token) do
-    {buffer_name, name} =
+  defp generate_function_token(buffer) do
+    {next_buffer, name} =
       buffer
       |> Buffer.consume_chars(8)
       |> Buffer.consume_chars(fn char -> Space.space?(char) end)
       |> Identifier.get_identifier()
 
-    {buffer_arguments, arguments} =
-      buffer_name
-      |> Buffer.consume_chars(fn char -> Space.space?(char) end)
-      |> Group.get_group(:parenthesis)
-
-    {buffer_body, body} =
-      buffer_arguments
-      |> Buffer.consume_chars(fn char -> Space.space?(char) end)
-      |> Group.get_group(:brace)
-
-    new_token =
+    token =
       Token.new(
         :function,
-        interval: Buffer.interval(buffer, buffer_body),
         data: %{
-          name: name,
-          arguments: arguments.children
-        },
-        children: body.children
+          name: name
+        }
       )
+
+    {next_buffer, token}
+  end
+
+  defp generate_arguments({buffer, token}) do
+    case buffer
+         |> Buffer.consume_chars(fn char -> Space.space?(char) end)
+         |> Group.get_group(:parenthesis) do
+      :nomatch ->
+        error = Error.new("Missing arguments", interval: token.interval)
+        {buffer, token |> Token.put(:error, error)}
+
+      {new_buffer, %Token{data: %{error: error}}} ->
+        {new_buffer, token |> Token.put(:error, error)}
+
+      {new_buffer, token_arguments} ->
+        case token_arguments.children |> parse_arguments do
+          {:error, error} ->
+            {new_buffer, token |> Token.put(:error, error)}
+
+          arguments ->
+            {new_buffer, token |> Token.put(:arguments, arguments)}
+        end
+    end
+  end
+
+  defp generate_body({buffer, %Token{data: %{error: _}} = token}) do
+    {buffer, token}
+  end
+
+  defp generate_body({buffer, token}) do
+    case buffer
+         |> Buffer.consume_chars(fn char -> Space.space?(char) end)
+         |> Group.get_group(:brace) do
+      :nomatch ->
+        error = Error.new("Unexpected token", interval: token.interval)
+        {buffer, token |> Token.put(:error, error)}
+
+      {new_buffer, %Token{data: %{error: error}}} ->
+        {new_buffer, token |> Token.put(:error, error)}
+
+      {new_buffer, token_body} ->
+        children = Parser.rearrange_tokens(token_body.children, Js.rearrangers())
+        {new_buffer, token |> Token.put(:body, children)}
+    end
+  end
+
+  defp parse_arguments(tokens, arguments \\ []) do
+    case tokens do
+      [] ->
+        arguments
+
+      [%Token{type: :identifier} = argument | tail] ->
+        case tail do
+          [] ->
+            arguments ++ [argument]
+
+          [%Token{type: :punctuation, data: %{category: :comma}} | next_tokens] ->
+            parse_arguments(next_tokens, arguments ++ [argument])
+
+          [head | _] ->
+            {:error, Error.new("unexpected token", interval: head.interval)}
+        end
+
+      [head | _] ->
+        {:error, Error.new("unexpected token", interval: head.interval)}
+    end
+  end
+
+  defp set_interval({buffer, token}, previous_buffer) do
+    {buffer, Map.put(token, :interval, Buffer.interval(previous_buffer, buffer))}
+  end
+
+  defp parse_function(buffer, token) do
+    {new_buffer, new_token} =
+      buffer
+      |> generate_function_token()
+      |> generate_arguments()
+      |> generate_body()
+      |> set_interval(buffer)
 
     {
       :cont,
-      buffer_body,
+      new_buffer,
       Token.concat(token, new_token)
     }
   end
+
+  @impl Parser
+  def rearrange([%Token{type: :function, data: %{body: body}} = head | tail]) do
+    [
+      Token.put(head, :body, Parser.rearrange_tokens(body, Js.rearrangers()))
+      | tail
+    ]
+  end
+
+  @impl Parser
+  def rearrange(tokens), do: tokens
 end

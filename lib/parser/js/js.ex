@@ -1,6 +1,7 @@
 defmodule Origami.Parser.Js do
   @moduledoc false
 
+  alias Origami.Parser
   alias Origami.Parser.{Syntax, Token}
 
   @behaviour Syntax
@@ -31,13 +32,19 @@ defmodule Origami.Parser.Js do
 
   def end_line?(_), do: false
 
+  def rearrange_token(token), do: Parser.rearrange_token(token, rearrangers)
+
+  def rearrange_tokens(tokens), do: Parser.rearrange_tokens(tokens, rearrangers)
+
   @impl Syntax
   def rearrangers() do
     [
+      Origami.Parser.Js.Punctuation,
       Origami.Parser.Js.Number,
       Origami.Parser.Js.Expression,
       Origami.Parser.Js.Declaration,
-      Origami.Parser.Js.Punctuation
+      Origami.Parser.Js.Function,
+      Origami.Parser.Js.Root
     ]
   end
 
@@ -50,8 +57,8 @@ defmodule Origami.Parser.Js do
       Origami.Parser.Js.CommentBlock,
       Origami.Parser.Js.Identifier,
       Origami.Parser.Js.Number,
+      Origami.Parser.Js.Function,
       Origami.Parser.Js.Keyword,
-      # Origami.Parser.Js.Function,
       Origami.Parser.Js.OpenGroup,
       Origami.Parser.Js.CloseGroup,
       Origami.Parser.Js.String,
@@ -60,4 +67,19 @@ defmodule Origami.Parser.Js do
       Origami.Parser.Js.Unknown
     ]
   end
+end
+
+defmodule Origami.Parser.Js.Root do
+  alias Origami.Parser
+  alias Origami.Parser.{Token, Js}
+
+  @behaviour Parser
+
+  @impl Parser
+  def rearrange([%Token{children: children} = token | next_tokens]) do
+    [Map.put(token, :children, Parser.rearrange_tokens(children, Js.rearrangers())) | next_tokens]
+  end
+
+  @impl Parser
+  def rearrange(tokens), do: tokens
 end
