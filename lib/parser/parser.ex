@@ -21,7 +21,9 @@ defmodule Origami.Parser do
     Enum.flat_map(children, &aggregate_errors/1) ++ errors
   end
 
-  defp to_result(token) do
+  defp to_result({_, token}), do: to_result(token)
+
+  defp to_result(token) when is_struct(token) do
     case aggregate_errors(token) do
       [] ->
         {:ok, token}
@@ -35,53 +37,64 @@ defmodule Origami.Parser do
   def parse(source, syntax, options \\ []) do
     buffer = Buffer.from(source, options)
 
-    case parse_buffer(syntax.parsers, buffer, Token.new(:root)) |> to_result do
+    case parse_buffer(buffer, Token.new(:root), syntax.parsers()) |> to_result() do
       {:ok, token} ->
-        rearrange_token(token, syntax.rearrangers) |> to_result
+        rearrange_token(token, syntax.rearrangers) |> to_result()
 
       errors ->
         errors
     end
   end
 
-  def parse_buffer(parsers, buffer, token) do
+  def parse_buffer(buffer, token, parsers) do
     cond do
       Buffer.over?(buffer) ->
-        token
+        {buffer, token}
 
       Buffer.end_line?(buffer) ->
-        parse_buffer(parsers, Buffer.consume_line(buffer), token)
+        parse_buffer(Buffer.consume_line(buffer), token, parsers)
 
       true ->
-        case parse_next(parsers, buffer, token) do
+        case parse_next(buffer, token, parsers) do
           {:halt, new_buffer, new_tree} ->
             {new_buffer, new_tree}
 
           {:cont, new_buffer, new_tree} ->
-            parse_buffer(parsers, new_buffer, new_tree)
+            parse_buffer(new_buffer, new_tree, parsers)
         end
     end
   end
 
-  defp rearrange_token(token, []), do: token
+  defp parse_next(buffer, _, []) do
+    raise "Can't find parser to process line: #{Buffer.current_line(buffer)}"
+  end
 
-  defp rearrange_token(token, rearrangers) do
-    case token.children do
-      [] ->
-        token
+  defp parse_next(buffer, token, [parser | parsers]) do
+    case parser.consume(buffer, token) do
+      :nomatch ->
+        parse_next(buffer, token, parsers)
 
-      children ->
-        %Token{token | children: rearrange_tokens(children, rearrangers)}
+      result ->
+        result
     end
   end
 
-  defp rearrange_tokens([], _), do: []
+  def rearrange_token(token, []) when is_struct(token), do: token
 
-  defp rearrange_tokens([first_token | remaining_tokens], rearrangers) do
-    case rearrange_next(
-           [rearrange_token(first_token, rearrangers) | remaining_tokens],
-           rearrangers
-         ) do
+  def rearrange_token(token, rearrangers) when is_struct(token) do
+    case rearrange_tokens([token], rearrangers) do
+      [] ->
+        token
+
+      [new_token | _] ->
+        new_token
+    end
+  end
+
+  def rearrange_tokens([], _), do: []
+
+  def rearrange_tokens([_ | remaining_tokens] = tokens, rearrangers) do
+    case rearrange_next(tokens, rearrangers) do
       :drop ->
         rearrange_tokens(remaining_tokens, rearrangers)
 
@@ -105,20 +118,6 @@ defmodule Origami.Parser do
       _ ->
         new_tokens = rearranger.rearrange(tokens)
         rearrange_next(new_tokens, rearrangers)
-    end
-  end
-
-  defp parse_next([], buffer, _) do
-    raise "Can't find parser to process line: #{Buffer.current_line(buffer)}"
-  end
-
-  defp parse_next([parser | parsers], buffer, token) do
-    case parser.consume(buffer, token) do
-      :nomatch ->
-        parse_next(parsers, buffer, token)
-
-      result ->
-        result
     end
   end
 end
