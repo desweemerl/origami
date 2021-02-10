@@ -1,7 +1,7 @@
 defmodule Origami.Parser.Token do
   alias __MODULE__
 
-  alias Origami.Parser.{Error, Interval}
+  alias Origami.Parser.Interval
 
   @type t :: %Token{
           type: atom,

@@ -3,25 +3,49 @@ defmodule Origami.Parser.Js.Declaration do
 
   alias Origami.Parser
   alias Origami.Parser.{Interval, Token}
+  alias Origami.Parser.Js.Expression
 
   @behaviour Parser
 
   defp fetch_declarator([
          %Token{type: :identifier} = identifier_token,
-         %Token{type: :operator, data: %{content: "="}},
-         value_token | remaining_tokens
+         %Token{type: :operator, data: %{content: "="}}
+         | remaining_tokens
        ]) do
-    new_token =
-      Token.new(
-        :identifier,
-        interval: identifier_token.interval,
-        data: %{
-          name: identifier_token.data.name,
-          content: value_token
-        }
-      )
+    case Expression.generate_expression(remaining_tokens) do
+      [%Token{type: :expression} = expression_token | next_tokens] ->
+        interval = Interval.merge(identifier_token.interval, expression_token.interval)
 
-    {[new_token], remaining_tokens, Interval.merge(new_token.interval, value_token.interval)}
+        new_token =
+          Token.new(
+            :identifier,
+            interval: interval,
+            data: %{
+              name: identifier_token.data.name,
+              content: expression_token
+            }
+          )
+
+        {[new_token], next_tokens, interval}
+
+      [%Token{} = value_token | next_tokens] ->
+        interval = Interval.merge(identifier_token.interval, value_token.interval)
+
+        new_token =
+          Token.new(
+            :identifier,
+            interval: interval,
+            data: %{
+              name: identifier_token.data.name,
+              content: value_token
+            }
+          )
+
+        {[new_token], next_tokens, Interval.merge(new_token.interval, value_token.interval)}
+
+      _ ->
+        :nomatch
+    end
   end
 
   defp fetch_declarator([%Token{type: :identifier} = identifier_token | remaining_tokens]) do

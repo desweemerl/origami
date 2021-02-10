@@ -32,9 +32,9 @@ defmodule Origami.Parser.Js do
 
   def end_line?(_), do: false
 
-  def rearrange_token(token), do: Parser.rearrange_token(token, rearrangers)
+  def rearrange_token(token), do: Parser.rearrange_token(token, rearrangers())
 
-  def rearrange_tokens(tokens), do: Parser.rearrange_tokens(tokens, rearrangers)
+  def rearrange_tokens(tokens), do: Parser.rearrange_tokens(tokens, rearrangers())
 
   @impl Syntax
   def rearrangers() do
