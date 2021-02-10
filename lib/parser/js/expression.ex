@@ -2,19 +2,9 @@ defmodule Origami.Parser.Js.Expression do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Interval, Token}
+  alias Origami.Parser.{Interval, Js, Token}
 
   @behaviour Parser
-
-  defp recursive_lookup(token) do
-    case token do
-      %Token{type: :group, children: children, data: %{category: :parenthesis}} = group_token ->
-        %Token{group_token | children: generate_expression(children)}
-
-      _ ->
-        token
-    end
-  end
 
   defp get_expression_token(tokens) do
     case tokens do
@@ -26,7 +16,7 @@ defmodule Origami.Parser.Js.Expression do
     end
   end
 
-  defp generate_expression(tokens) do
+  def generate_expression(tokens) do
     case tokens do
       [
         %Token{type: type} = identifier_token,
@@ -52,7 +42,7 @@ defmodule Origami.Parser.Js.Expression do
             interval: Interval.merge(identifier_token.interval, right_interval),
             data: %{
               left: identifier_token,
-              right: right_token,
+              right: Js.rearrange_token(right_token),
               operator: content,
               category: :assignment
             }
@@ -71,8 +61,8 @@ defmodule Origami.Parser.Js.Expression do
             :expression,
             interval: Interval.merge(left_token.interval, right_token.interval),
             data: %{
-              left: left_token |> recursive_lookup,
-              right: right_token |> recursive_lookup,
+              left: Js.rearrange_token(left_token),
+              right: Js.rearrange_token(right_token),
               operator: content,
               category: category
             }
