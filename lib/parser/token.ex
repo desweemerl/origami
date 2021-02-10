@@ -31,6 +31,10 @@ defmodule Origami.Parser.Token do
     %Token{token | children: children ++ [child_token]}
   end
 
+  def put(%Token{data: data} = token, key, value) do
+    %Token{token | data: Map.put(data, key, value)}
+  end
+
   def last_child(token, default \\ nil)
 
   def last_child(%Token{children: []}, default), do: default
