@@ -52,10 +52,11 @@ defmodule Origami.Parser.Buffer do
   end
 
   def consume_chars(mod_buffer, fun) when is_function(fun) do
-    case fun.(get_char(mod_buffer)) do
+    {char, new_mod_buffer} = get_char(mod_buffer)
+
+    case fun.(char) do
       true ->
-        consume_char(mod_buffer)
-        |> consume_chars(fun)
+        consume_chars(new_mod_buffer, fun)
 
       _ ->
         mod_buffer
