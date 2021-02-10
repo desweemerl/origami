@@ -44,7 +44,7 @@ defmodule Origami.Parser.Js.Group do
     end
   end
 
-  defp process_last_child({buffer, token}) do
+  defp process_last_child({buffer, token}, start_interval) do
     last_token = Token.last_child(token)
 
     cond do
@@ -53,46 +53,29 @@ defmodule Origami.Parser.Js.Group do
         {buffer, Token.skip_last_child(token)}
 
       true ->
-        {buffer,
-         %Token{
-           token
-           | data: %{error: Error.new("Unmatching bracket for group #{token.data.category}")}
-         }}
+        error = Error.new("Unmatched group #{token.data.category}", interval: start_interval)
+        {buffer, token |> Token.put(:error, error)}
     end
   end
 
   defp process_children(buffer, %Token{data: %{category: :brace}} = token) do
-    Parser.parse_buffer(Js.parsers(), buffer, token)
+    Parser.parse_buffer(buffer, token, Js.parsers())
   end
 
   defp process_children(buffer, %Token{data: %{category: :bracket}} = token) do
-    Parser.parse_buffer(bracket_parser(), buffer, token)
+    Parser.parse_buffer(buffer, token, bracket_parser())
   end
 
   defp process_children(buffer, %Token{data: %{category: :parenthesis}} = token) do
-    Parser.parse_buffer(bracket_parser(), buffer, token)
+    Parser.parse_buffer(buffer, token, bracket_parser())
   end
 
   def get_group(buffer, enforced_category \\ nil) do
-    {char, new_buffer} = Buffer.get_char(buffer)
+    {char, char_buffer} = Buffer.get_char(buffer)
     category = bracket_type(char)
 
     cond do
-      not open_group?(char) and not is_nil(enforced_category) and category != enforced_category ->
-        position = Buffer.position(buffer)
-
-        token =
-          Token.new(
-            :group,
-            interval: Buffer.interval(buffer, new_buffer),
-            data: %{
-              error: Error.new("Unexpected token #{char} at #{position}")
-            }
-          )
-
-        {new_buffer, token}
-
-      open_group?(char) ->
+      open_group?(char) && (is_nil(enforced_category) || category == enforced_category) ->
         token =
           Token.new(
             :group,
@@ -102,8 +85,8 @@ defmodule Origami.Parser.Js.Group do
           )
 
         {new_buffer, new_token} =
-          process_children(Buffer.consume_char(buffer), token)
-          |> process_last_child()
+          process_children(char_buffer, token)
+          |> process_last_child(Buffer.interval(buffer, char_buffer))
 
         {new_buffer, %Token{new_token | interval: Buffer.interval(buffer, new_buffer)}}
 
@@ -141,7 +124,7 @@ defmodule Origami.Parser.Js.CloseGroup do
   import Origami.Parser.Js.Group
 
   alias Origami.Parser
-  alias Origami.Parser.{Buffer, Token}
+  alias Origami.Parser.{Buffer, Error, Token}
 
   @behaviour Parser
 
@@ -151,20 +134,34 @@ defmodule Origami.Parser.Js.CloseGroup do
 
     case close_group?(char) do
       true ->
-        group_token =
+        interval = Buffer.interval(buffer, new_buffer)
+
+        token =
           Token.new(
             :group_close,
-            interval: Buffer.interval(buffer, new_buffer),
+            interval: interval,
             data: %{
               category: bracket_type(char)
             }
           )
 
-        {
-          :halt,
-          new_buffer,
-          Token.concat(tree, group_token)
-        }
+        case tree do
+          %Token{type: :root} ->
+            error = Error.new("Unmatched group #{token.data.category}", interval: interval)
+
+            {
+              :cont,
+              new_buffer,
+              token |> Token.put(:error, error)
+            }
+
+          _ ->
+            {
+              :halt,
+              new_buffer,
+              Token.concat(tree, token)
+            }
+        end
 
       _ ->
         :nomatch
