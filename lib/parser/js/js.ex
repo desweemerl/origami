@@ -36,6 +36,10 @@ defmodule Origami.Parser.Js do
 
   def rearrange_tokens(tokens), do: Parser.rearrange_tokens(tokens, rearrangers())
 
+  def check_token(token), do: Parser.check_token(token, guards())
+
+  def check_tokens(tokens), do: Parser.check_tokens(tokens, guards())
+
   @impl Syntax
   def rearrangers() do
     [
@@ -67,11 +71,18 @@ defmodule Origami.Parser.Js do
       Origami.Parser.Js.Unknown
     ]
   end
+
+  @impl Syntax
+  def guards() do
+    [
+      Origami.Parser.Js.Root
+    ]
+  end
 end
 
 defmodule Origami.Parser.Js.Root do
   alias Origami.Parser
-  alias Origami.Parser.{Token, Js}
+  alias Origami.Parser.{Error, Js, Token}
 
   @behaviour Parser
 
@@ -91,4 +102,24 @@ defmodule Origami.Parser.Js.Root do
 
   @impl Parser
   def rearrange(tokens), do: tokens
+
+  @impl Parser
+  def check(%Token{interval: interval} = token) do
+    errors =
+      case Token.get(token, :error) do
+        nil ->
+          []
+
+        error ->
+          [%Error{error | interval: interval}]
+      end
+
+    case Token.get(token, :children) do
+      nil ->
+        errors
+
+      children ->
+        errors ++ Js.check_tokens(children)
+    end
+  end
 end

@@ -6,40 +6,19 @@ defmodule Origami.Parser do
 
   @callback rearrange(list(Token.t())) :: list(Token.t())
 
-  @optional_callbacks consume: 2, rearrange: 1
+  @callback check(Token.t()) :: list(Error.t())
 
-  defp aggregate_errors(%Token{interval: interval} = token) do
-    errors =
-      case Token.get(token, :error) do
-        nil ->
-          []
-
-        error ->
-          [%Error{error | interval: interval}]
-      end
-
-    (Token.get(token, :children, []) |> Enum.flat_map(&aggregate_errors/1)) ++ errors
-  end
-
-  defp to_result({_, token}), do: to_result(token)
-
-  defp to_result(token) when is_struct(token) do
-    case aggregate_errors(token) do
-      [] ->
-        {:ok, token}
-
-      errors ->
-        {:error, errors}
-    end
-  end
+  @optional_callbacks consume: 2, rearrange: 1, check: 1
 
   @spec parse(any, module) :: Token.t()
   def parse(source, syntax, options \\ []) do
-    buffer = Buffer.from(source, options)
-
-    case parse_buffer(buffer, Token.new(:root), syntax.parsers()) |> to_result() do
+    case Buffer.from(source, options)
+         |> parse_buffer(Token.new(:root), syntax.parsers())
+         |> to_result(syntax.guards()) do
       {:ok, token} ->
-        rearrange_token(token, syntax.rearrangers) |> to_result()
+        token
+        |> rearrange_token(syntax.rearrangers())
+        |> to_result(syntax.guards())
 
       errors ->
         errors
@@ -118,5 +97,41 @@ defmodule Origami.Parser do
       new_tokens ->
         rearrange_next(new_tokens, rearrangers)
     end
+  end
+
+  defp aggregate_errors(errors) do
+    cond do
+      errors == [] || is_nil(errors) ->
+        []
+
+      errors ->
+        errors
+    end
+  end
+
+  defp to_result({_, token}, guards) do
+    to_result(token, guards)
+  end
+
+  defp to_result(%Token{} = token, guards) do
+    case check_token(token, guards) do
+      [] ->
+        {:ok, token}
+
+      errors ->
+        {:error, errors}
+    end
+  end
+
+  def check_token(token, guards) do
+    guards
+    |> Enum.map(& &1.check(token))
+    |> Enum.flat_map(&aggregate_errors/1)
+  end
+
+  def check_tokens(tokens, guards) do
+    tokens
+    |> Enum.map(&check_token(&1, guards))
+    |> Enum.flat_map(&aggregate_errors/1)
   end
 end
