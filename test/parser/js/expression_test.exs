@@ -2,7 +2,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
   use ExUnit.Case
 
   alias Origami.Parser
-  alias Origami.Parser.{Interval, Js, Token}
+  alias Origami.Parser.{Error, Interval, Js, Token}
 
   test "check if simple binary expression is parsed" do
     expression = "1 + 2 + 3"
@@ -142,6 +142,43 @@ defmodule Origami.Parser.Js.ExpressionTest do
               ),
             operator: "+"
           )
+      )
+    ]
+
+    assert expectation == children
+  end
+
+  test "check if wrong char in expression generates error" do
+    expression = "a = 1 + /"
+
+    {:error, [error]} = Parser.parse(expression, Js)
+
+    assert Error.new("unexpected token", interval: Interval.new(0, 8, 0, 8)) == error
+  end
+
+  test "check if call is parsed" do
+    expression = "test(a + 1, b)"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 13),
+        category: :call,
+        callee: Token.new(:identifier, Interval.new(0, 0, 0, 3), name: "test"),
+        arguments: [
+          Token.new(
+            :expression,
+            Interval.new(0, 5, 0, 9),
+            category: :arithmetic,
+            operator: "+",
+            left: Token.new(:identifier, Interval.new(0, 5, 0, 5), name: "a"),
+            right: Token.new(:number, Interval.new(0, 9, 0, 9), value: "1", category: :integer)
+          ),
+          Token.new(:identifier, Interval.new(0, 12, 0, 12), name: "b")
+        ]
       )
     ]
 

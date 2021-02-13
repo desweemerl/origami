@@ -123,11 +123,15 @@ defmodule Origami.Parser do
     end
   end
 
+  def check_token(nil, _), do: []
+
   def check_token(token, guards) do
     guards
     |> Enum.map(& &1.check(token))
     |> Enum.flat_map(&aggregate_errors/1)
   end
+
+  def check_tokens([], _), do: []
 
   def check_tokens(tokens, guards) do
     tokens

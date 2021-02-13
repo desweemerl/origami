@@ -43,12 +43,12 @@ defmodule Origami.Parser.Js do
   @impl Syntax
   def rearrangers() do
     [
+      Origami.Parser.Js.Root,
       Origami.Parser.Js.Punctuation,
       Origami.Parser.Js.Number,
       Origami.Parser.Js.Expression,
       Origami.Parser.Js.Declaration,
-      Origami.Parser.Js.Function,
-      Origami.Parser.Js.Root
+      Origami.Parser.Js.Function
     ]
   end
 
@@ -75,7 +75,8 @@ defmodule Origami.Parser.Js do
   @impl Syntax
   def guards() do
     [
-      Origami.Parser.Js.Root
+      Origami.Parser.Js.Root,
+      Origami.Parser.Js.Expression
     ]
   end
 end
