@@ -25,13 +25,7 @@ defmodule Origami.Parser.Js.Function do
       |> Buffer.consume_chars(fn char -> Space.space?(char) end)
       |> Identifier.get_identifier()
 
-    token =
-      Token.new(
-        :function,
-        data: %{
-          name: name
-        }
-      )
+    token = Token.new(:function, name: name)
 
     {next_buffer, token}
   end
@@ -48,12 +42,12 @@ defmodule Origami.Parser.Js.Function do
         {new_buffer, token |> Token.put(:error, error)}
 
       {new_buffer, token_arguments} ->
-        case token_arguments.children |> parse_arguments do
+        case Token.get(token_arguments, :children, []) |> parse_arguments() do
           {:error, error} ->
-            {new_buffer, token |> Token.put(:error, error)}
+            {new_buffer, Token.put(token, :error, error)}
 
           arguments ->
-            {new_buffer, token |> Token.put(:arguments, arguments)}
+            {new_buffer, Token.put(token, :arguments, arguments)}
         end
     end
   end
@@ -74,7 +68,7 @@ defmodule Origami.Parser.Js.Function do
         {new_buffer, token |> Token.put(:error, error)}
 
       {new_buffer, token_body} ->
-        children = Parser.rearrange_tokens(token_body.children, Js.rearrangers())
+        children = Token.get(token_body, :children, []) |> Js.rearrange_tokens()
         {new_buffer, token |> Token.put(:body, children)}
     end
   end
@@ -102,7 +96,7 @@ defmodule Origami.Parser.Js.Function do
   end
 
   defp set_interval({buffer, token}, previous_buffer) do
-    {buffer, Map.put(token, :interval, Buffer.interval(previous_buffer, buffer))}
+    {buffer, %Token{token | interval: Buffer.interval(previous_buffer, buffer)}}
   end
 
   defp parse_function(buffer, token) do
@@ -123,7 +117,7 @@ defmodule Origami.Parser.Js.Function do
   @impl Parser
   def rearrange([%Token{type: :function, data: %{body: body}} = head | tail]) do
     [
-      Token.put(head, :body, Parser.rearrange_tokens(body, Js.rearrangers()))
+      Token.put(head, :body, Js.rearrange_tokens(body))
       | tail
     ]
   end

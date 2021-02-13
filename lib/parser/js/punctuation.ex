@@ -26,10 +26,8 @@ defmodule Origami.Parser.Js.Punctuation do
         new_token =
           Token.new(
             :punctuation,
-            interval: Buffer.interval(buffer, new_buffer),
-            data: %{
-              category: type
-            }
+            Buffer.interval(buffer, new_buffer),
+            category: type
           )
 
         {

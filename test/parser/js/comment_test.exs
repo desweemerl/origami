@@ -15,10 +15,8 @@ defmodule Origami.Parser.Js.CommentTest do
     token =
       Token.new(
         :comment,
-        interval: Interval.new(0, start, 0, String.length(text) - 1),
-        data: %{
-          content: " This is a comment"
-        }
+        Interval.new(0, start, 0, String.length(text) - 1),
+        content: " This is a comment"
       )
 
     assert token == child
@@ -39,10 +37,8 @@ defmodule Origami.Parser.Js.CommentTest do
     token =
       Token.new(
         :comment_block,
-        interval: Interval.new(0, start, 2, 9),
-        data: %{
-          content: " This is a\nmultiline\ncomment "
-        }
+        Interval.new(0, start, 2, 9),
+        content: " This is a\nmultiline\ncomment "
       )
 
     assert token == child

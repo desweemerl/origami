@@ -7,11 +7,9 @@ defmodule Origami.Parser.Js.NumberTest do
   defp build_token(number, category) do
     Token.new(
       :number,
-      interval: Interval.new(0, 0, 0, String.length(number) - 1),
-      data: %{
-        value: String.replace(number, " ", ""),
-        category: category
-      }
+      Interval.new(0, 0, 0, String.length(number) - 1),
+      value: String.replace(number, " ", ""),
+      category: category
     )
   end
 

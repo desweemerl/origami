@@ -76,8 +76,17 @@ defmodule Origami.Parser.Js.Root do
   @behaviour Parser
 
   @impl Parser
-  def rearrange([%Token{children: children} = token | next_tokens]) do
-    [Map.put(token, :children, Parser.rearrange_tokens(children, Js.rearrangers())) | next_tokens]
+  def rearrange([token | next_tokens] = tokens) do
+    case Token.get(token, :children) do
+      nil ->
+        tokens
+
+      children ->
+        [
+          Token.put(token, :children, Js.rearrange_tokens(children))
+          | next_tokens
+        ]
+    end
   end
 
   @impl Parser

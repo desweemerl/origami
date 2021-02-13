@@ -25,7 +25,7 @@ defmodule Origami.Parser.Js.Expression do
       ]
       when type in [:store_variable, :identifier] ->
         {right_token, next_tokens} =
-          remaining_tokens |> generate_expression |> get_expression_token
+          remaining_tokens |> generate_expression() |> get_expression_token()
 
         right_interval =
           case right_token do
@@ -39,13 +39,11 @@ defmodule Origami.Parser.Js.Expression do
         new_token =
           Token.new(
             :expression,
-            interval: Interval.merge(identifier_token.interval, right_interval),
-            data: %{
-              left: identifier_token,
-              right: Js.rearrange_token(right_token),
-              operator: content,
-              category: :assignment
-            }
+            Interval.merge(identifier_token.interval, right_interval),
+            left: identifier_token,
+            right: Js.rearrange_token(right_token),
+            operator: content,
+            category: :assignment
           )
 
         [new_token | next_tokens]
@@ -59,13 +57,11 @@ defmodule Origami.Parser.Js.Expression do
         new_token =
           Token.new(
             :expression,
-            interval: Interval.merge(left_token.interval, right_token.interval),
-            data: %{
-              left: Js.rearrange_token(left_token),
-              right: Js.rearrange_token(right_token),
-              operator: content,
-              category: category
-            }
+            Interval.merge(left_token.interval, right_token.interval),
+            left: Js.rearrange_token(left_token),
+            right: Js.rearrange_token(right_token),
+            operator: content,
+            category: category
           )
 
         generate_expression([new_token | remaining_tokens])

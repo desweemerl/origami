@@ -118,16 +118,16 @@ defmodule Origami.Parser.Js.Number do
         :nomatch
 
       {new_buffer, number, category, error} ->
-        data = %{
+        data = [
           value: number,
           category: category
-        }
+        ]
 
         new_token =
           Token.new(
             :number,
-            interval: Buffer.interval(buffer, new_buffer),
-            data: (is_nil(error) && data) || Map.put(data, :error, error)
+            Buffer.interval(buffer, new_buffer),
+            (is_nil(error) && data) || data ++ [error: error]
           )
 
         {
@@ -153,7 +153,7 @@ defmodule Origami.Parser.Js.Number do
         [
           token
           | [
-              %Token{next_token | data: %{error: Error.new("Unexpected token")}}
+              Token.put(next_token, :error, Error.new("Unexpected token"))
               | remaining_tokens
             ]
         ]

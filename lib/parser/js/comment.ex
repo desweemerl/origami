@@ -19,8 +19,8 @@ defmodule Origami.Parser.Js.Comment do
         new_token =
           Token.new(
             :comment,
-            interval: Buffer.interval(buffer, new_buffer),
-            data: %{content: content}
+            Buffer.interval(buffer, new_buffer),
+            content: content
           )
 
         {
@@ -57,10 +57,8 @@ defmodule Origami.Parser.Js.CommentBlock do
               {
                 Token.new(
                   :comment_block,
-                  interval: Buffer.interval(buffer, remaining_buffer),
-                  data: %{
-                    error: Error.new("Unmatching comment block")
-                  }
+                  Buffer.interval(buffer, remaining_buffer),
+                  error: Error.new("Unmatching comment block")
                 ),
                 remaining_buffer
               }
@@ -69,10 +67,8 @@ defmodule Origami.Parser.Js.CommentBlock do
               {
                 Token.new(
                   :comment_block,
-                  interval: Buffer.interval(buffer, new_buffer),
-                  data: %{
-                    content: content
-                  }
+                  Buffer.interval(buffer, new_buffer),
+                  content: content
                 ),
                 new_buffer
               }

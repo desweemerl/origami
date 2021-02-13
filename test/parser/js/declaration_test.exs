@@ -11,81 +11,64 @@ defmodule Origami.Parser.Js.DeclarationTest do
     const c = 1;
     """
 
-    {:ok, %Token{children: children}} = Parser.parse(declaration, Js)
+    {:ok, token} = Parser.parse(declaration, Js)
+    children = Token.get(token, :children)
 
     expectation = [
       Token.new(
         :variable_declaration,
-        interval: Interval.new(0, 0, 0, 8),
-        data: %{
-          name: "var"
-        },
+        Interval.new(0, 0, 0, 8),
+        name: "var",
         children: [
           Token.new(
             :identifier,
-            interval: Interval.new(0, 4, 0, 8),
-            data: %{
-              name: "a",
-              content:
-                Token.new(
-                  :number,
-                  interval: Interval.new(0, 8, 0, 8),
-                  data: %{
-                    category: :integer,
-                    value: "1"
-                  }
-                )
-            }
+            Interval.new(0, 4, 0, 8),
+            name: "a",
+            content:
+              Token.new(
+                :number,
+                Interval.new(0, 8, 0, 8),
+                category: :integer,
+                value: "1"
+              )
           )
         ]
       ),
       Token.new(
         :variable_declaration,
-        interval: Interval.new(1, 0, 1, 8),
-        data: %{
-          name: "let"
-        },
+        Interval.new(1, 0, 1, 8),
+        name: "let",
         children: [
           Token.new(
             :identifier,
-            interval: Interval.new(1, 4, 1, 8),
-            data: %{
-              name: "b",
-              content:
-                Token.new(
-                  :number,
-                  interval: Interval.new(1, 8, 1, 8),
-                  data: %{
-                    category: :integer,
-                    value: "1"
-                  }
-                )
-            }
+            Interval.new(1, 4, 1, 8),
+            name: "b",
+            content:
+              Token.new(
+                :number,
+                Interval.new(1, 8, 1, 8),
+                category: :integer,
+                value: "1"
+              )
           )
         ]
       ),
       Token.new(
         :variable_declaration,
-        interval: Interval.new(2, 0, 2, 10),
-        data: %{
-          name: "const"
-        },
+        Interval.new(2, 0, 2, 10),
+        name: "const",
         children: [
           Token.new(
             :identifier,
-            interval: Interval.new(2, 6, 2, 10),
-            data: %{
-              name: "c",
-              content:
-                Token.new(
-                  :number,
-                  interval: Interval.new(2, 10, 2, 10),
-                  data: %{
-                    category: :integer,
-                    value: "1"
-                  }
-                )
-            }
+            Interval.new(2, 6, 2, 10),
+            name: "c",
+            content:
+              Token.new(
+                :number,
+                Interval.new(2, 10, 2, 10),
+                category: :integer,
+                value: "1"
+              )
           )
         ]
       )
@@ -97,71 +80,60 @@ defmodule Origami.Parser.Js.DeclarationTest do
   test "check if expression is parsed in declaration" do
     declaration = "let a = (b + 1) / 3"
 
-    {:ok, %Token{children: children}} = Parser.parse(declaration, Js)
+    {:ok, token} = Parser.parse(declaration, Js)
+    children = Token.get(token, :children)
 
     expectation = [
       Token.new(
         :variable_declaration,
-        interval: Interval.new(0, 0, 0, 18),
-        data: %{
-          name: "let"
-        },
+        Interval.new(0, 0, 0, 18),
+        name: "let",
         children: [
           Token.new(
             :identifier,
-            interval: Interval.new(0, 4, 0, 18),
-            data: %{
-              name: "a",
-              content:
-                Token.new(
-                  :expression,
-                  interval: Interval.new(0, 8, 0, 18),
-                  data: %{
-                    category: :arithmetic,
-                    operator: "/",
-                    left:
+            Interval.new(0, 4, 0, 18),
+            name: "a",
+            content:
+              Token.new(
+                :expression,
+                Interval.new(0, 8, 0, 18),
+                category: :arithmetic,
+                operator: "/",
+                left:
+                  Token.new(
+                    :group,
+                    Interval.new(0, 8, 0, 14),
+                    category: :parenthesis,
+                    children: [
                       Token.new(
-                        :group,
-                        interval: Interval.new(0, 8, 0, 14),
-                        data: %{category: :parenthesis},
-                        children: [
+                        :expression,
+                        Interval.new(0, 9, 0, 13),
+                        category: :arithmetic,
+                        operator: "+",
+                        left:
                           Token.new(
-                            :expression,
-                            interval: Interval.new(0, 9, 0, 13),
-                            data: %{
-                              category: :arithmetic,
-                              operator: "+",
-                              left:
-                                Token.new(
-                                  :identifier,
-                                  interval: Interval.new(0, 9, 0, 9),
-                                  data: %{name: "b"}
-                                ),
-                              right:
-                                Token.new(
-                                  :number,
-                                  interval: Interval.new(0, 13, 0, 13),
-                                  data: %{
-                                    category: :integer,
-                                    value: "1"
-                                  }
-                                )
-                            }
+                            :identifier,
+                            Interval.new(0, 9, 0, 9),
+                            name: "b"
+                          ),
+                        right:
+                          Token.new(
+                            :number,
+                            Interval.new(0, 13, 0, 13),
+                            category: :integer,
+                            value: "1"
                           )
-                        ]
-                      ),
-                    right:
-                      Token.new(
-                        :number,
-                        interval: Interval.new(0, 18, 0, 18),
-                        data: %{
-                          category: :integer,
-                          value: "3"
-                        }
                       )
-                  }
-                )
-            }
+                    ]
+                  ),
+                right:
+                  Token.new(
+                    :number,
+                    Interval.new(0, 18, 0, 18),
+                    category: :integer,
+                    value: "3"
+                  )
+              )
           )
         ]
       )

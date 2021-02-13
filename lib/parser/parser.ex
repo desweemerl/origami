@@ -8,17 +8,17 @@ defmodule Origami.Parser do
 
   @optional_callbacks consume: 2, rearrange: 1
 
-  defp aggregate_errors(%Token{children: children, interval: interval, data: data}) do
+  defp aggregate_errors(%Token{interval: interval} = token) do
     errors =
-      cond do
-        Map.has_key?(data, :error) && !is_nil(data.error) ->
-          [%Error{data.error | interval: interval}]
-
-        true ->
+      case Token.get(token, :error) do
+        nil ->
           []
+
+        error ->
+          [%Error{error | interval: interval}]
       end
 
-    Enum.flat_map(children, &aggregate_errors/1) ++ errors
+    (Token.get(token, :children, []) |> Enum.flat_map(&aggregate_errors/1)) ++ errors
   end
 
   defp to_result({_, token}), do: to_result(token)
@@ -115,8 +115,7 @@ defmodule Origami.Parser do
       :drop ->
         :drop
 
-      _ ->
-        new_tokens = rearranger.rearrange(tokens)
+      new_tokens ->
         rearrange_next(new_tokens, rearrangers)
     end
   end

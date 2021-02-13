@@ -76,13 +76,7 @@ defmodule Origami.Parser.Js.Group do
 
     cond do
       open_group?(char) && (is_nil(enforced_category) || category == enforced_category) ->
-        token =
-          Token.new(
-            :group,
-            data: %{
-              category: category
-            }
-          )
+        token = Token.new(:group, category: category)
 
         {new_buffer, new_token} =
           process_children(char_buffer, token)
@@ -139,10 +133,8 @@ defmodule Origami.Parser.Js.CloseGroup do
         token =
           Token.new(
             :group_close,
-            interval: interval,
-            data: %{
-              category: bracket_type(char)
-            }
+            interval,
+            category: bracket_type(char)
           )
 
         case tree do

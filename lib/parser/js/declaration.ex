@@ -19,11 +19,9 @@ defmodule Origami.Parser.Js.Declaration do
         new_token =
           Token.new(
             :identifier,
-            interval: interval,
-            data: %{
-              name: identifier_token.data.name,
-              content: expression_token
-            }
+            interval,
+            name: identifier_token.data.name,
+            content: expression_token
           )
 
         {[new_token], next_tokens, interval}
@@ -34,11 +32,9 @@ defmodule Origami.Parser.Js.Declaration do
         new_token =
           Token.new(
             :identifier,
-            interval: interval,
-            data: %{
-              name: identifier_token.data.name,
-              content: value_token
-            }
+            interval,
+            name: identifier_token.data.name,
+            content: value_token
           )
 
         {[new_token], next_tokens, Interval.merge(new_token.interval, value_token.interval)}
@@ -62,7 +58,7 @@ defmodule Origami.Parser.Js.Declaration do
   defp fetch_declarator(_), do: :nomatch
 
   defp build_tokens(
-         %Token{children: children, interval: parent_interval} = parent_token,
+         %Token{interval: parent_interval} = parent_token,
          remaining_tokens
        ) do
     case fetch_declarator(remaining_tokens) do
@@ -70,24 +66,20 @@ defmodule Origami.Parser.Js.Declaration do
         [parent_token | remaining_tokens]
 
       {identifier_token, next_tokens, interval} ->
-        build_tokens(
-          %Token{
-            parent_token
-            | children: children ++ identifier_token,
-              interval: Interval.merge(parent_interval, interval)
-          },
-          next_tokens
-        )
+        children = Token.get(parent_token, :children, [])
+
+        parent_token
+        |> Token.put(:children, children ++ identifier_token)
+        |> Map.put(:interval, Interval.merge(parent_interval, interval))
+        |> build_tokens(next_tokens)
     end
   end
 
   @impl Parser
   def rearrange([%Token{type: :keyword, data: %{name: name}, interval: interval} | next_tokens])
       when name in ["let", "const", "var"] do
-    build_tokens(
-      Token.new(:variable_declaration, data: %{name: name}, interval: interval),
-      next_tokens
-    )
+    Token.new(:variable_declaration, interval, name: name)
+    |> build_tokens(next_tokens)
   end
 
   @impl Parser

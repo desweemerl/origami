@@ -65,11 +65,9 @@ defmodule Origami.Parser.Js.Operator do
         new_token =
           Token.new(
             :operator,
-            interval: Buffer.interval(buffer, new_buffer),
-            data: %{
-              category: operator_category(chars),
-              content: chars
-            }
+            Buffer.interval(buffer, new_buffer),
+            category: operator_category(chars),
+            content: chars
           )
 
         {

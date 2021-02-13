@@ -11,58 +11,51 @@ defmodule Origami.Parser.Js.FunctionTest do
     }
     """
 
-    {:ok, %Token{children: children}} = Parser.parse(function, Js)
+    {:ok, token} = Parser.parse(function, Js)
+    children = Token.get(token, :children)
 
     expectation = [
       Token.new(
         :function,
-        interval: Interval.new(0, 0, 2, 0),
-        data: %{
-          name: "test",
-          arguments: [
-            Token.new(
-              :identifier,
-              interval: Interval.new(0, 14, 0, 14),
-              data: %{
+        Interval.new(0, 0, 2, 0),
+        name: "test",
+        arguments: [
+          Token.new(
+            :identifier,
+            Interval.new(0, 14, 0, 14),
+            name: "a"
+          ),
+          Token.new(
+            :identifier,
+            Interval.new(0, 17, 0, 17),
+            name: "b"
+          )
+        ],
+        body: [
+          Token.new(
+            :keyword,
+            Interval.new(1, 2, 1, 7),
+            name: "return"
+          ),
+          Token.new(
+            :expression,
+            Interval.new(1, 9, 1, 13),
+            category: :arithmetic,
+            operator: "+",
+            left:
+              Token.new(
+                :identifier,
+                Interval.new(1, 9, 1, 9),
                 name: "a"
-              }
-            ),
-            Token.new(
-              :identifier,
-              interval: Interval.new(0, 17, 0, 17),
-              data: %{
+              ),
+            right:
+              Token.new(
+                :identifier,
+                Interval.new(1, 13, 1, 13),
                 name: "b"
-              }
-            )
-          ],
-          body: [
-            Token.new(
-              :keyword,
-              interval: Interval.new(1, 2, 1, 7),
-              data: %{name: "return"}
-            ),
-            Token.new(
-              :expression,
-              interval: Interval.new(1, 9, 1, 13),
-              data: %{
-                category: :arithmetic,
-                operator: "+",
-                left:
-                  Token.new(
-                    :identifier,
-                    interval: Interval.new(1, 9, 1, 9),
-                    data: %{name: "a"}
-                  ),
-                right:
-                  Token.new(
-                    :identifier,
-                    interval: Interval.new(1, 13, 1, 13),
-                    data: %{name: "b"}
-                  )
-              }
-            )
-          ]
-        }
+              )
+          )
+        ]
       )
     ]
 

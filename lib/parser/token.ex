@@ -1,54 +1,74 @@
 defmodule Origami.Parser.Token do
   alias __MODULE__
-
   alias Origami.Parser.Interval
 
   @type t :: %Token{
           type: atom,
           interval: Interval.t(),
-          children: list,
           data: map()
         }
 
   @enforce_keys [:type]
   defstruct [
     :type,
-    :interval,
-    :children,
-    :data
+    interval: nil,
+    data: %{}
   ]
 
-  def new(type, config \\ []) do
-    %Token{
-      type: type,
-      interval: Keyword.get(config, :interval),
-      children: Keyword.get(config, :children, []),
-      data: Keyword.get(config, :data, %{})
-    }
+  def new(type) do
+    %Token{type: type}
   end
 
-  def concat(%Token{children: children} = token, child_token) do
-    %Token{token | children: children ++ [child_token]}
+  def new(type, {_, _, _, _} = interval) do
+    new(type, interval, [])
+  end
+
+  def new(type, config) when is_list(config) do
+    new(type, nil, config)
+  end
+
+  def new(type, interval, config) when is_tuple(interval) or is_nil(interval) do
+    data = Enum.into(config, %{})
+
+    %Token{
+      type: type,
+      interval: interval,
+      data: data
+    }
   end
 
   def put(%Token{data: data} = token, key, value) do
     %Token{token | data: Map.put(data, key, value)}
   end
 
-  def last_child(token, default \\ nil)
-
-  def last_child(%Token{children: []}, default), do: default
-
-  def last_child(%Token{children: children}, _) do
-    [last | _] = Enum.reverse(children)
-    last
+  def get(%Token{data: data}, key, default \\ nil) do
+    Map.get(data, key, default)
   end
 
-  def skip_last_child(%Token{children: []} = token), do: token
+  def concat(token, child_token) do
+    children = get(token, :children, [])
+    put(token, :children, children ++ [child_token])
+  end
 
-  def skip_last_child(%Token{children: children} = token) do
-    [_ | tail] = Enum.reverse(children)
+  def last_child(token, default \\ nil) do
+    case get(token, :children, []) do
+      [] ->
+        default
 
-    %Token{token | children: Enum.reverse(tail)}
+      children ->
+        [last | _] = Enum.reverse(children)
+        last
+    end
+  end
+
+  def skip_last_child(token) do
+    case get(token, :children, []) do
+      [] ->
+        token
+
+      children ->
+        [_ | tail] = Enum.reverse(children)
+        put(token, :children, Enum.reverse(tail))
+    end
   end
 end

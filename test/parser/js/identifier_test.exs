@@ -7,10 +7,8 @@ defmodule Origami.Parser.Js.IdentifierTest do
   defp build_token(identifier) do
     Token.new(
       :identifier,
-      interval: Interval.new(0, 0, 0, String.length(identifier) - 1),
-      data: %{
-        name: identifier
-      }
+      Interval.new(0, 0, 0, String.length(identifier) - 1),
+      name: identifier
     )
   end
 
