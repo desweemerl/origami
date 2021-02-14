@@ -12,7 +12,7 @@ defmodule Origami.MixProject do
       test_coverage: [tool: ExCoveralls],
       dialyzer: [
         plt_core_path: "priv/plts",
-        plt_add_apps: [:mix]
+        plt_add_apps: [:mix, :ex_unit]
       ]
     ]
   end
@@ -38,7 +38,7 @@ defmodule Origami.MixProject do
       {:floki, "~> 0.29.0"},
       {:file_system, "~> 0.2.9"},
       {:excoveralls, "~> 0.13"},
-      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
 end
