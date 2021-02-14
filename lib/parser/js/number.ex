@@ -15,10 +15,12 @@ defmodule Origami.Parser.Js.Number do
 
   @behaviour Parser
 
-  defguard is_empty(char) when is_nil(char) or char == ""
-  defguard is_char_digit(char) when char in ?0..?9
-  defguard is_char_hex(char) when char in ?0..?9 or char in ?a..?f or char in ?A..?F
-  defguard is_char_binary(char) when char in ?0..?1
+  defguard is_char_digit(char_code) when char_code in ?0..?9
+
+  defguard is_char_hex(char_code)
+           when char_code in ?0..?9 or char_code in ?a..?f or char_code in ?A..?F
+
+  defguard is_char_binary(char_code) when char_code in ?0..?1
 
   defp to_category(type) when (type &&& @hexadecimal) != 0 and (type &&& @negative) != 0 do
     :neg_hexadecimal
