@@ -10,7 +10,7 @@ defmodule Origami.Parser do
 
   @optional_callbacks consume: 2, rearrange: 1, check: 1
 
-  @spec parse(any, module) :: Token.t()
+  @spec parse(any(), module()) :: {:ok, Token.t()} | {:error, list(Error.t())}
   def parse(source, syntax, options \\ []) do
     case Buffer.from(source, options)
          |> parse_buffer(Token.new(:root), syntax.parsers())

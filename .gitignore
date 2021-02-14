@@ -26,3 +26,6 @@ origami-*.tar
 /assets/*log
 
 .*.swp
+
+/priv/plts/*.plt
+/priv/plts/*.plt.hash

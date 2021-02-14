@@ -1,6 +1,7 @@
 defmodule Origami.Parser.Interval do
   @moduledoc false
 
+  alias __MODULE__
   alias Origami.Parser.Position
 
   @type t() :: {pos_integer, pos_integer, pos_integer, pos_integer}

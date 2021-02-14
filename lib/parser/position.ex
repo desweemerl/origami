@@ -1,6 +1,8 @@
 defmodule Origami.Parser.Position do
   @moduledoc false
 
+  alias __MODULE__
+
   @type t() :: {pos_integer, pos_integer}
 
   @spec new(pos_integer, pos_integer) :: Position.t()

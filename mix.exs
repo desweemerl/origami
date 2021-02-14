@@ -9,7 +9,11 @@ defmodule Origami.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      dialyzer: [
+        plt_core_path: "priv/plts",
+        plt_add_apps: [:mix]
+      ]
     ]
   end
 
@@ -33,7 +37,8 @@ defmodule Origami.MixProject do
       {:jason, "~> 1.2.2"},
       {:floki, "~> 0.29.0"},
       {:file_system, "~> 0.2.9"},
-      {:excoveralls, "~> 0.13"}
+      {:excoveralls, "~> 0.13"},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
     ]
   end
 end
