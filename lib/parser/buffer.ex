@@ -69,31 +69,29 @@ defmodule Origami.Parser.Buffer do
     {start_line, start_col} = old_mod.position(old_buffer)
     {stop_line, stop_col} = new_mod.position(new_buffer)
 
+    lines = stop_line - start_line - 1
+
     new_stop =
-      cond do
-        (lines = stop_line - start_line - 1) >= 0 ->
-          buffer =
-            cond do
-              lines > 0 ->
-                new_mod.consume_lines(old_buffer, lines)
+      if lines >= 0 do
+        buffer =
+          if lines > 0 do
+            new_mod.consume_lines(old_buffer, lines)
+          else
+            old_buffer
+          end
 
-              true ->
-                old_buffer
-            end
+        {new_stop_line, new_stop_col} = new_mod.position(buffer)
+        {remaining_chars, _} = new_mod.get_chars(buffer, -1)
 
-          {new_stop_line, new_stop_col} = new_mod.position(buffer)
-          {remaining_chars, _} = new_mod.get_chars(buffer, -1)
-
-          Position.new(
-            new_stop_line,
-            max(0, new_stop_col + String.length(remaining_chars) - 1)
-          )
-
-        true ->
-          Position.new(
-            stop_line,
-            max(0, stop_col - 1)
-          )
+        Position.new(
+          new_stop_line,
+          max(0, new_stop_col + String.length(remaining_chars) - 1)
+        )
+      else
+        Position.new(
+          stop_line,
+          max(0, stop_col - 1)
+        )
       end
 
     Interval.new({start_line, start_col}, new_stop)
@@ -115,43 +113,39 @@ defmodule Origami.Parser.Buffer do
   end
 
   defp chars_until({mod, buffer} = mod_buffer, chars, content, options) do
-    cond do
-      Buffer.over?(mod_buffer) ->
-        :nomatch
+    if Buffer.over?(mod_buffer) do
+      :nomatch
+    else
+      {new_content, new_buffer} = mod.get_chars(buffer, -1)
 
-      true ->
-        {new_content, new_buffer} = mod.get_chars(buffer, -1)
+      case :binary.match(new_content, chars) do
+        :nomatch ->
+          case Keyword.get(options, :scope_line, false) do
+            false ->
+              line_return = Keyword.get(options, :line_return, @default_line_return)
 
-        case :binary.match(new_content, chars) do
-          :nomatch ->
-            case Keyword.get(options, :scope_line, false) do
-              false ->
-                line_return = Keyword.get(options, :line_return, @default_line_return)
+              chars_until(
+                {mod, new_buffer},
+                chars,
+                content <> new_content <> line_return,
+                options
+              )
 
-                chars_until(
-                  {mod, new_buffer},
-                  chars,
-                  content <> new_content <> line_return,
-                  options
-                )
+            _ ->
+              :nomatch
+          end
 
-              _ ->
-                :nomatch
-            end
+        {position, _} ->
+          l = String.length(chars)
+          {new_content, new_buffer} = Buffer.get_chars(mod_buffer, position + l)
 
-          {position, _} ->
-            l = String.length(chars)
-            {new_content, new_buffer} = Buffer.get_chars(mod_buffer, position + l)
-
-            case Keyword.get(options, :exclude_chars, false) do
-              true ->
-                {content <> String.slice(new_content, 0..(String.length(new_content) - l - 1)),
-                 new_buffer}
-
-              _ ->
-                {content <> new_content, new_buffer}
-            end
-        end
+          if Keyword.get(options, :exclude_chars, false) do
+            {content <> String.slice(new_content, 0..(String.length(new_content) - l - 1)),
+             new_buffer}
+          else
+            {content <> new_content, new_buffer}
+          end
+      end
     end
   end
 end
@@ -207,12 +201,10 @@ defmodule Origami.Parser.BufferText do
 
   @impl Buffer
   def consume_lines(%BufferText{content: content, line: line} = buffer, lines) when lines > 0 do
-    cond do
-      length(content) < lines ->
-        consume_lines(buffer, -1)
-
-      true ->
-        %BufferText{buffer | content: remove_lines(content, lines), line: line + lines, col: 0}
+    if length(content) < lines do
+      consume_lines(buffer, -1)
+    else
+      %BufferText{buffer | content: remove_lines(content, lines), line: line + lines, col: 0}
     end
   end
 
@@ -224,12 +216,10 @@ defmodule Origami.Parser.BufferText do
 
   @impl Buffer
   def consume_chars(%BufferText{col: col, content: [chars | _]} = buffer, num_chars) do
-    cond do
-      String.length(chars) <= col + num_chars ->
-        consume_lines(buffer, 1)
-
-      true ->
-        %BufferText{buffer | col: col + num_chars}
+    if String.length(chars) <= col + num_chars do
+      consume_lines(buffer, 1)
+    else
+      %BufferText{buffer | col: col + num_chars}
     end
   end
 
@@ -246,12 +236,10 @@ defmodule Origami.Parser.BufferText do
         %BufferText{content: [chars | _], col: col} = buffer,
         num_chars
       ) do
-    cond do
-      String.length(chars) < col + num_chars ->
-        get_chars(buffer, -1)
-
-      true ->
-        {String.slice(chars, col, num_chars), consume_chars(buffer, num_chars)}
+    if String.length(chars) < col + num_chars do
+      get_chars(buffer, -1)
+    else
+      {String.slice(chars, col, num_chars), consume_chars(buffer, num_chars)}
     end
   end
 end

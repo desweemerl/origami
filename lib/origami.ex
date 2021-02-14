@@ -1,4 +1,6 @@
 defmodule Origami.Socket do
+  @moduledoc false
+
   use Phoenix.Socket
 
   channel("origami:interaction", Origami.InteractionChannel)

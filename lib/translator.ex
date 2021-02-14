@@ -1,4 +1,6 @@
 defmodule Origami.Translator do
+  @moduledoc false
+
   use GenServer
 
   require Logger
@@ -35,12 +37,12 @@ defmodule Origami.Translator do
     md5_hash = :crypto.hash(:md5, content) |> Base.encode16(case: :lower)
     target_file = Path.join(target, "#{root_name}.#{md5_hash}.js")
 
-    if !File.regular?(target_file) do
+    if File.regular?(target_file) do
+      {:nochange, target_file}
+    else
       Logger.debug("translating #{relative_path} to #{target_file} ...")
       process_content(content, target_file)
       {:ok, target_file}
-    else
-      {:nochange, target_file}
     end
   end
 

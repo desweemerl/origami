@@ -1,4 +1,6 @@
 defmodule Origami.Parser do
+  @moduledoc false
+
   alias Origami.Parser.{Buffer, Error, Token}
 
   @callback consume(Buffer.t(), Token.t()) ::

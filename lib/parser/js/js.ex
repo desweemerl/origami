@@ -41,7 +41,7 @@ defmodule Origami.Parser.Js do
   def check_tokens(tokens), do: Parser.check_tokens(tokens, guards())
 
   @impl Syntax
-  def rearrangers() do
+  def rearrangers do
     [
       Origami.Parser.Js.Root,
       Origami.Parser.Js.Punctuation,
@@ -53,7 +53,7 @@ defmodule Origami.Parser.Js do
   end
 
   @impl Syntax
-  def parsers() do
+  def parsers do
     [
       Origami.Parser.Js.Space,
       Origami.Parser.Js.Punctuation,
@@ -73,7 +73,7 @@ defmodule Origami.Parser.Js do
   end
 
   @impl Syntax
-  def guards() do
+  def guards do
     [
       Origami.Parser.Js.Root,
       Origami.Parser.Js.Expression
@@ -82,6 +82,8 @@ defmodule Origami.Parser.Js do
 end
 
 defmodule Origami.Parser.Js.Root do
+  @moduledoc false
+
   alias Origami.Parser
   alias Origami.Parser.{Error, Js, Token}
 

@@ -15,33 +15,31 @@ defmodule Origami.Parser.Js.Number do
 
   @behaviour Parser
 
-  defguard is_empty(value) when is_nil(value) or value == ""
+  defguard is_empty(char) when is_nil(char) or char == ""
+  defguard is_char_digit(char) when char in ?0..?9
+  defguard is_char_hex(char) when char in ?0..?9 or char in ?a..?f or char in ?A..?F
+  defguard is_char_binary(char) when char in ?0..?1
 
-  @spec digit?(any) :: boolean
-  def digit?(c) when is_empty(c), do: false
-  def digit?(<<c>>), do: c in ?0..?9
-
-  @spec hexadecimal?(any) :: boolean
-  def hexadecimal?(c) when is_empty(c), do: false
-  def hexadecimal?(<<c>>), do: digit?(<<c>>) || c in ?a..?f || c in ?A..?F
-
-  @spec binary?(any) :: boolean
-  def binary?(c) when is_empty(c), do: false
-  def binary?(c), do: c in ["0", "1"]
-
-  defp to_category(type) do
-    cond do
-      (type &&& @hexadecimal) != 0 && (type &&& @negative) != 0 -> :neg_hexadecimal
-      (type &&& @hexadecimal) != 0 -> :hexadecimal
-      (type &&& @binary) != 0 && (type &&& @negative) != 0 -> :neg_binary
-      (type &&& @binary) != 0 -> :binary
-      (type &&& @float) != 0 && (type &&& @negative) != 0 -> :neg_float
-      (type &&& @float) != 0 -> :float
-      (type &&& @integer) != 0 && (type &&& @negative) != 0 -> :neg_integer
-      (type &&& @integer) != 0 -> :integer
-      true -> :unknown
-    end
+  defp to_category(type) when (type &&& @hexadecimal) != 0 and (type &&& @negative) != 0 do
+    :neg_hexadecimal
   end
+
+  defp to_category(type) when (type &&& @hexadecimal) != 0, do: :hexadecimal
+
+  defp to_category(type) when (type &&& @binary) != 0 and (type &&& @negative) != 0 do
+    :neg_binary
+  end
+
+  defp to_category(type) when (type &&& @binary) != 0, do: :binary
+  defp to_category(type) when (type &&& @float) != 0 and (type &&& @negative) != 0, do: :neg_float
+  defp to_category(type) when (type &&& @float) != 0, do: :float
+
+  defp to_category(type) when (type &&& @integer) != 0 and (type &&& @negative) != 0 do
+    :neg_integer
+  end
+
+  defp to_category(type) when (type &&& @integer) != 0, do: :integer
+  defp to_category(_), do: :unknown
 
   defp generate_error(char, buffer, number, type) do
     {new_buffer, new_number} =
@@ -62,50 +60,63 @@ defmodule Origami.Parser.Js.Number do
     }
   end
 
+  defp process_char(char_code, type, number, _, new_buffer)
+       when (is_char_digit(char_code) and ((type &&& @integer) != 0 or (type &&& @float) != 0)) or
+              (is_char_hex(char_code) and (type &&& @hexadecimal) != 0) or
+              (is_char_binary(char_code) and (type &&& @binary) != 0) do
+    get_number(new_buffer, number <> <<char_code>>, type)
+  end
+
+  defp process_char(char_code, type, number, _, new_buffer)
+       when is_char_digit(char_code) and type in [@none, @negative] do
+    get_number(new_buffer, number <> <<char_code>>, type ||| @integer)
+  end
+
+  defp process_char(?\., type, number, buffer, new_buffer) do
+    if (type &&& @float) != 0 do
+      generate_error(".", buffer, number, type)
+    else
+      get_number(new_buffer, number <> ".", type ||| @float)
+    end
+  end
+
+  defp process_char(?\-, type, number, _, new_buffer)
+       when type == @none do
+    get_number(new_buffer, number <> "-", type ||| @negative)
+  end
+
+  defp process_char(?\s, type, number, _, new_buffer)
+       when type == @negative do
+    get_number(new_buffer, number, type)
+  end
+
+  defp process_char(char, type, number, _, new_buffer)
+       when char in [?x, ?X] and number in ["0", "-0"] do
+    get_number(new_buffer, number <> <<char>>, type ||| @hexadecimal)
+  end
+
+  defp process_char(char, type, number, _, new_buffer)
+       when char in [?b, ?B] and number in ["0", "-0"] do
+    get_number(new_buffer, number <> <<char>>, type ||| @binary)
+  end
+
+  defp process_char(_, type, number, buffer, _) do
+    {
+      buffer,
+      number,
+      to_category(type),
+      nil
+    }
+  end
+
   defp get_number(buffer, number, type \\ 0) do
     {char, new_buffer} = Buffer.get_char(buffer)
 
-    cond do
-      digit?(char) && ((type &&& @integer) != 0 || (type &&& @float) != 0) ->
-        get_number(new_buffer, number <> char, type)
-
-      hexadecimal?(char) && (type &&& @hexadecimal) != 0 ->
-        get_number(new_buffer, number <> char, type)
-
-      binary?(char) && (type &&& @binary) != 0 ->
-        get_number(new_buffer, number <> char, type)
-
-      digit?(char) && type in [@none, @negative] ->
-        get_number(new_buffer, number <> char, type ||| @integer)
-
-      char == "." ->
-        cond do
-          (type &&& @float) != 0 ->
-            generate_error(char, buffer, number, type)
-
-          true ->
-            get_number(new_buffer, number <> char, type ||| @float)
-        end
-
-      char == "-" && type == @none ->
-        get_number(new_buffer, number <> char, @negative)
-
-      char == " " && type == @negative ->
-        get_number(new_buffer, number, type)
-
-      char in ["x", "X"] && number in ["0", "-0"] ->
-        get_number(new_buffer, number <> char, type ||| @hexadecimal)
-
-      char in ["b", "B"] && number in ["0", "-0"] ->
-        get_number(new_buffer, number <> char, type ||| @binary)
-
-      true ->
-        {
-          buffer,
-          number,
-          to_category(type),
-          nil
-        }
+    if is_nil(char) || char == "" do
+      process_char(0, type, number, buffer, new_buffer)
+    else
+      <<char_code>> = char
+      process_char(char_code, type, number, buffer, new_buffer)
     end
   end
 
@@ -146,20 +157,18 @@ defmodule Origami.Parser.Js.Number do
 
   @impl Parser
   def rearrange([%Token{type: :number} = token | next_tokens] = tokens) do
-    cond do
-      Js.glued?(tokens) ->
-        [next_token | remaining_tokens] = next_tokens
+    if Js.glued?(tokens) do
+      [next_token | remaining_tokens] = next_tokens
 
-        [
-          token
-          | [
-              Token.put(next_token, :error, Error.new("Unexpected token"))
-              | remaining_tokens
-            ]
-        ]
-
-      true ->
-        tokens
+      [
+        token
+        | [
+            Token.put(next_token, :error, Error.new("Unexpected token"))
+            | remaining_tokens
+          ]
+      ]
+    else
+      tokens
     end
   end
 

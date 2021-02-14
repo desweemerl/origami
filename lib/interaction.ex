@@ -1,4 +1,6 @@
 defmodule Origami.InteractionChannel do
+  @moduledoc false
+
   use Phoenix.Channel
 
   def join("origami:interaction", _payload, socket) do

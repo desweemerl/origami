@@ -4,7 +4,7 @@ defmodule Origami.Parser.Js.Group do
   alias Origami.Parser
   alias Origami.Parser.{Buffer, Error, Js, Token}
 
-  def bracket_parser() do
+  def bracket_parser do
     [
       Origami.Parser.Js.Space,
       Origami.Parser.Js.Punctuation,
@@ -47,14 +47,12 @@ defmodule Origami.Parser.Js.Group do
   defp process_last_child({buffer, token}, start_interval) do
     last_token = Token.last_child(token)
 
-    cond do
-      not is_nil(last_token) and last_token.type == :group_close and
-          last_token.data.category == token.data.category ->
-        {buffer, Token.skip_last_child(token)}
-
-      true ->
-        error = Error.new("Unmatched group #{token.data.category}", interval: start_interval)
-        {buffer, token |> Token.put(:error, error)}
+    if !is_nil(last_token) && last_token.type == :group_close &&
+         last_token.data.category == token.data.category do
+      {buffer, Token.skip_last_child(token)}
+    else
+      error = Error.new("Unmatched group #{token.data.category}", interval: start_interval)
+      {buffer, token |> Token.put(:error, error)}
     end
   end
 
@@ -74,18 +72,16 @@ defmodule Origami.Parser.Js.Group do
     {char, char_buffer} = Buffer.get_char(buffer)
     category = bracket_type(char)
 
-    cond do
-      open_group?(char) && (is_nil(enforced_category) || category == enforced_category) ->
-        token = Token.new(:group, category: category)
+    if open_group?(char) && (is_nil(enforced_category) || category == enforced_category) do
+      token = Token.new(:group, category: category)
 
-        {new_buffer, new_token} =
-          process_children(char_buffer, token)
-          |> process_last_child(Buffer.interval(buffer, char_buffer))
+      {new_buffer, new_token} =
+        process_children(char_buffer, token)
+        |> process_last_child(Buffer.interval(buffer, char_buffer))
 
-        {new_buffer, %Token{new_token | interval: Buffer.interval(buffer, new_buffer)}}
-
-      true ->
-        :nomatch
+      {new_buffer, %Token{new_token | interval: Buffer.interval(buffer, new_buffer)}}
+    else
+      :nomatch
     end
   end
 end

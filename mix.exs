@@ -38,7 +38,8 @@ defmodule Origami.MixProject do
       {:floki, "~> 0.29.0"},
       {:file_system, "~> 0.2.9"},
       {:excoveralls, "~> 0.13"},
-      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 end

@@ -2,19 +2,17 @@ defmodule Origami.Parser.Js.Function do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Buffer, Error, Token, Js}
-  alias Origami.Parser.Js.{Group, Space, Identifier}
+  alias Origami.Parser.{Buffer, Error, Js, Token}
+  alias Origami.Parser.Js.{Group, Identifier, Space}
 
   @behaviour Parser
 
   @impl Parser
   def consume(buffer, token) do
-    cond do
-      Buffer.check_chars(buffer, "function") ->
-        parse_function(buffer, token)
-
-      true ->
-        :nomatch
+    if Buffer.check_chars(buffer, "function") do
+      parse_function(buffer, token)
+    else
+      :nomatch
     end
   end
 

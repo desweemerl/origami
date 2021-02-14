@@ -13,24 +13,20 @@ defmodule Origami.Parser.Js.Identifier do
   defp get_identifier(buffer, "") do
     {char, new_buffer} = Buffer.get_char(buffer)
 
-    cond do
-      char != "" && first_char?(char) ->
-        get_identifier(new_buffer, char)
-
-      true ->
-        {buffer, ""}
+    if char != "" && first_char?(char) do
+      get_identifier(new_buffer, char)
+    else
+      {buffer, ""}
     end
   end
 
   defp get_identifier(buffer, identifier) do
     {char, new_buffer} = Buffer.get_char(buffer)
 
-    cond do
-      char != "" && char?(char) ->
-        get_identifier(new_buffer, identifier <> char)
-
-      true ->
-        {buffer, identifier}
+    if char != "" && char?(char) do
+      get_identifier(new_buffer, identifier <> char)
+    else
+      {buffer, identifier}
     end
   end
 

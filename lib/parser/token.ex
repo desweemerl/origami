@@ -1,4 +1,6 @@
 defmodule Origami.Parser.Token do
+  @moduledoc false
+
   alias __MODULE__
   alias Origami.Parser.Interval
 

@@ -43,7 +43,7 @@ defmodule Origami.Parser.Js.Operator do
     end
   end
 
-  defmacro operators() do
+  defmacro operators do
     quote do
       (@assignment_operators ++
          @arithmetic_operators ++
