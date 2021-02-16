@@ -39,6 +39,10 @@ defmodule Origami.Parser.Token do
     }
   end
 
+  def put(%Token{} = token, :interval, interval) do
+    %Token{token | interval: interval}
+  end
+
   def put(%Token{data: data} = token, key, value) do
     %Token{token | data: Map.put(data, key, value)}
   end

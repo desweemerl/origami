@@ -44,11 +44,11 @@ defmodule Origami.Parser.Js do
   def rearrangers do
     [
       Origami.Parser.Js.Root,
-      Origami.Parser.Js.Punctuation,
       Origami.Parser.Js.Number,
       Origami.Parser.Js.Expression,
       Origami.Parser.Js.Declaration,
-      Origami.Parser.Js.Function
+      Origami.Parser.Js.Function,
+      Origami.Parser.Js.Punctuation
     ]
   end
 

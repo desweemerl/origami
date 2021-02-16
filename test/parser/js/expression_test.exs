@@ -70,31 +70,24 @@ defmodule Origami.Parser.Js.ExpressionTest do
           ),
         right:
           Token.new(
-            :group,
+            :expression,
             Interval.new(0, 4, 0, 10),
-            category: :parenthesis,
-            children: [
+            category: :arithmetic,
+            left:
               Token.new(
-                :expression,
-                Interval.new(0, 5, 0, 9),
-                category: :arithmetic,
-                left:
-                  Token.new(
-                    :number,
-                    Interval.new(0, 5, 0, 5),
-                    category: :integer,
-                    value: "2"
-                  ),
-                right:
-                  Token.new(
-                    :number,
-                    Interval.new(0, 9, 0, 9),
-                    category: :integer,
-                    value: "3"
-                  ),
-                operator: "+"
-              )
-            ]
+                :number,
+                Interval.new(0, 5, 0, 5),
+                category: :integer,
+                value: "2"
+              ),
+            right:
+              Token.new(
+                :number,
+                Interval.new(0, 9, 0, 9),
+                category: :integer,
+                value: "3"
+              ),
+            operator: "+"
           ),
         operator: "+"
       )
@@ -179,6 +172,43 @@ defmodule Origami.Parser.Js.ExpressionTest do
           ),
           Token.new(:identifier, Interval.new(0, 12, 0, 12), name: "b")
         ]
+      )
+    ]
+
+    assert expectation == children
+  end
+
+  test "check if unary expression is parsed" do
+    expression = "!(a || b)"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 8),
+        category: :unary,
+        operator: "!",
+        argument:
+          Token.new(
+            :expression,
+            Interval.new(0, 1, 0, 8),
+            category: :logical,
+            operator: "||",
+            left:
+              Token.new(
+                :identifier,
+                Interval.new(0, 2, 0, 2),
+                name: "a"
+              ),
+            right:
+              Token.new(
+                :identifier,
+                Interval.new(0, 7, 0, 7),
+                name: "b"
+              )
+          )
       )
     ]
 

@@ -101,30 +101,23 @@ defmodule Origami.Parser.Js.DeclarationTest do
                 operator: "/",
                 left:
                   Token.new(
-                    :group,
+                    :expression,
                     Interval.new(0, 8, 0, 14),
-                    category: :parenthesis,
-                    children: [
+                    category: :arithmetic,
+                    operator: "+",
+                    left:
                       Token.new(
-                        :expression,
-                        Interval.new(0, 9, 0, 13),
-                        category: :arithmetic,
-                        operator: "+",
-                        left:
-                          Token.new(
-                            :identifier,
-                            Interval.new(0, 9, 0, 9),
-                            name: "b"
-                          ),
-                        right:
-                          Token.new(
-                            :number,
-                            Interval.new(0, 13, 0, 13),
-                            category: :integer,
-                            value: "1"
-                          )
+                        :identifier,
+                        Interval.new(0, 9, 0, 9),
+                        name: "b"
+                      ),
+                    right:
+                      Token.new(
+                        :number,
+                        Interval.new(0, 13, 0, 13),
+                        category: :integer,
+                        value: "1"
                       )
-                    ]
                   ),
                 right:
                   Token.new(
