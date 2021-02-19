@@ -215,6 +215,50 @@ defmodule Origami.Parser.Js.ExpressionTest do
     assert expectation == children
   end
 
+  test "check if ternary expression is parsed" do
+    expression = "!a ? 1 : 2"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 9),
+        category: :conditional,
+        test:
+          Token.new(
+            :expression,
+            Interval.new(0, 0, 0, 1),
+            category: :unary,
+            operator: "!",
+            argument:
+              Token.new(
+                :identifier,
+                Interval.new(0, 1, 0, 1),
+                name: "a"
+              )
+          ),
+        consequent:
+          Token.new(
+            :number,
+            Interval.new(0, 5, 0, 5),
+            category: :integer,
+            value: "1"
+          ),
+        alternate:
+          Token.new(
+            :number,
+            Interval.new(0, 9, 0, 9),
+            category: :integer,
+            value: "2"
+          )
+      )
+    ]
+
+    assert expectation == children
+  end
+
   test "check if mixed store variable expression is parsed" do
     expression = "@a = 1 + 2"
 
