@@ -154,16 +154,17 @@ defmodule Origami.Parser.Js.Expression do
   end
 
   def generate_expression([
-        %Token{type: :operator, data: %{content: "!"}} = operator_token,
+        %Token{type: :operator, data: %{content: content}} = operator_token,
         %Token{type: type} = argument_token
         | remaining_tokens
-      ]) do
+      ])
+      when content in ["!", "+"] do
     new_token =
       Token.new(
         :expression,
         Interval.merge(operator_token.interval, argument_token.interval),
         argument: argument_token |> process_sub_token(),
-        operator: "!",
+        operator: content,
         category: :unary
       )
 
@@ -233,7 +234,7 @@ defmodule Origami.Parser.Js.Expression do
         ]
         |> generate_expression()
 
-      [tokens] ->
+      tokens ->
         error_on_condition(expression_token, tokens)
     end
   end

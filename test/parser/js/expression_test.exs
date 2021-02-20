@@ -178,8 +178,8 @@ defmodule Origami.Parser.Js.ExpressionTest do
     assert expectation == children
   end
 
-  test "check if unary expression is parsed" do
-    expression = "!(a || b)"
+  defp generate_unary_test(operator) do
+    expression = operator <> "(a || b)"
 
     {:ok, token} = Parser.parse(expression, Js)
     children = Token.get(token, :children)
@@ -189,7 +189,7 @@ defmodule Origami.Parser.Js.ExpressionTest do
         :expression,
         Interval.new(0, 0, 0, 8),
         category: :unary,
-        operator: "!",
+        operator: operator,
         argument:
           Token.new(
             :expression,
@@ -213,6 +213,14 @@ defmodule Origami.Parser.Js.ExpressionTest do
     ]
 
     assert expectation == children
+  end
+
+  test "check if unary expression is parsed (!)" do
+    generate_unary_test("!")
+  end
+
+  test "check if unary expression is parsed (+)" do
+    generate_unary_test("+")
   end
 
   test "check if ternary expression is parsed" do
