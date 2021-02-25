@@ -311,4 +311,54 @@ defmodule Origami.Parser.Js.ExpressionTest do
 
     assert expectation == children
   end
+
+  test "check if update expression is parsed (prefix=false)" do
+    expression = "a++"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 2),
+        category: :update,
+        operator: "++",
+        prefix: false,
+        argument:
+          Token.new(
+            :identifier,
+            Interval.new(0, 0, 0, 0),
+            name: "a"
+          )
+      )
+    ]
+
+    assert expectation == children
+  end
+
+  test "check if update expression is parsed (prefix=true)" do
+    expression = "--a"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 2),
+        category: :update,
+        operator: "--",
+        prefix: true,
+        argument:
+          Token.new(
+            :identifier,
+            Interval.new(0, 2, 0, 2),
+            name: "a"
+          )
+      )
+    ]
+
+    assert expectation == children
+  end
 end

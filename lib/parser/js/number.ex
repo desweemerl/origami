@@ -130,6 +130,9 @@ defmodule Origami.Parser.Js.Number do
       {_, "", _, _} ->
         :nomatch
 
+      {_, _, :unknown, _} ->
+        :nomatch
+
       {new_buffer, number, category, error} ->
         data = [
           value: number,
