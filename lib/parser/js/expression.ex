@@ -8,14 +8,100 @@ defmodule Origami.Parser.Js.Expression do
 
   defguardp is_operand_type(type) when type in [:number, :identifier, :expression]
 
-  defp get_expression_token(tokens) do
-    case tokens do
-      [head | tail] ->
-        {head, tail}
+  defp merge_operand_token(expression_token, [], _), do: [expression_token]
 
-      _ ->
-        {nil, tokens}
-    end
+  defp merge_operand_token(
+         expression_token,
+         [%Token{type: :group, data: %{category: :parenthesis}} = group_token | next_tokens],
+         key
+       ) do
+    [operand_token | _] = generate_expression([group_token])
+    merge_operand_token(expression_token, [operand_token | next_tokens], key)
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [
+           %Token{type: :identifier} = identifier_token,
+           %Token{type: :operator, data: %{content: content}} = operator_token
+           | next_tokens
+         ],
+         key
+       )
+       when content in ["++", "--"] do
+    [operand_token | _] = generate_expression([identifier_token, operator_token])
+    merge_operand_token(expression_token, [operand_token | next_tokens], key)
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [
+           %Token{type: :operator, data: %{content: content}} = operator_token,
+           %Token{type: :identifier} = identifier_token
+           | next_tokens
+         ],
+         key
+       )
+       when content in ["++", "--"] do
+    [operand_token | _] = generate_expression([operator_token, identifier_token])
+    merge_operand_token(expression_token, [operand_token | next_tokens], key)
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [
+           %Token{type: :operator, data: %{content: content}} = operator_token,
+           %Token{type: type} = identifier_token
+           | next_tokens
+         ],
+         key
+       )
+       when is_operand_type(type) and content in ["!", "+"] do
+    [operand_token | _] = generate_expression([operator_token, identifier_token])
+    merge_operand_token(expression_token, [operand_token | next_tokens], key)
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [
+           %Token{type: :operator, data: %{content: content}} = operator_token,
+           %Token{type: :group, data: %{category: :parenthesis}} = group_token
+           | next_tokens
+         ],
+         key
+       )
+       when content in ["!", "+"] do
+    [operand_token | _] = generate_expression([operator_token, group_token])
+    merge_operand_token(expression_token, [operand_token | next_tokens], key)
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [%Token{type: type} = operand_token | next_tokens],
+         key
+       )
+       when is_operand_type(type) do
+    [
+      expression_token
+      |> Token.put(key, operand_token)
+      |> Token.put(
+        :interval,
+        Interval.merge(expression_token.interval, operand_token.interval)
+      )
+      | next_tokens
+    ]
+    |> generate_expression()
+  end
+
+  defp merge_operand_token(
+         expression_token,
+         [token | next_tokens],
+         key
+       ) do
+    [
+      token |> Token.put(:error, Error.new("unexpected token"))
+      | next_tokens
+    ]
   end
 
   defp process_arguments(tokens, arguments \\ []) do
@@ -40,135 +126,8 @@ defmodule Origami.Parser.Js.Expression do
     end
   end
 
-  defp process_sub_token(%Token{type: type} = token) when is_operand_type(type) do
-    token
-  end
-
-  defp process_sub_token(
-         %Token{
-           type: :group,
-           interval: interval,
-           data: %{children: children}
-         } = token
-       ) do
-    case generate_expression(children) do
-      [%Token{type: type} = child_token] when is_operand_type(type) ->
-        Token.put(child_token, :interval, interval)
-
-      [unknown_token | _] ->
-        Token.put(
-          token,
-          :error,
-          Error.new("unexpected token", interval: unknown_token.interval)
-        )
-
-      _ ->
-        Token.put(
-          token,
-          :error,
-          Error.new("unexpected token", interval: token.interval)
-        )
-    end
-  end
-
-  defp process_sub_token(token) do
-    Token.put(token, :error, Error.new("unexpected token"))
-  end
-
-  # Manage assignment a = value
-  def generate_expression([
-        %Token{type: type} = identifier_token,
-        %Token{type: :operator, data: %{category: :assignment, content: content}} = operator_token
-        | remaining_tokens
-      ])
-      when type in [:store_variable, :identifier] do
-    {right_token, next_tokens} =
-      remaining_tokens
-      |> generate_expression()
-      |> get_expression_token()
-
-    right_interval =
-      case right_token do
-        nil ->
-          operator_token.interval
-
-        _ ->
-          right_token.interval
-      end
-
-    new_token =
-      Token.new(
-        :expression,
-        Interval.merge(identifier_token.interval, right_interval),
-        left: identifier_token,
-        right: right_token,
-        operator: content,
-        category: :assignment
-      )
-
-    generate_expression([new_token | next_tokens])
-  end
-
-  # Manage arithmetic/logical operations
-  def generate_expression([
-        %Token{type: left_type} = left_token,
-        %Token{type: :operator, data: %{category: operator_category, content: content}} =
-          operator_token,
-        %Token{type: right_type} = right_token
-        | remaining_tokens
-      ])
-      when operator_category in [:arithmetic, :bitwise, :comparison] or content in ["&&", "||"] do
-    new_token =
-      Token.new(
-        :expression,
-        Interval.merge(left_token.interval, right_token.interval),
-        left: left_token |> process_sub_token(),
-        right: right_token |> process_sub_token(),
-        operator: content,
-        category: operator_category
-      )
-
-    generate_expression([new_token | remaining_tokens])
-  end
-
-  def generate_expression([
-        %Token{type: :identifier} = identifier_token,
-        %Token{type: :group, data: %{category: :parenthesis}} = arguments_token
-        | remaining_tokens
-      ]) do
-    arguments =
-      Token.get(arguments_token, :children, [])
-      |> Js.rearrange_tokens()
-      |> process_arguments()
-
-    new_token =
-      Token.new(
-        :expression,
-        Interval.merge(identifier_token.interval, arguments_token.interval),
-        callee: identifier_token,
-        arguments: arguments,
-        category: :call
-      )
-
-    [new_token | remaining_tokens]
-  end
-
-  def generate_expression([
-        %Token{type: :operator, data: %{content: content}} = operator_token,
-        %Token{type: type} = argument_token
-        | remaining_tokens
-      ])
-      when content in ["!", "+"] do
-    new_token =
-      Token.new(
-        :expression,
-        Interval.merge(operator_token.interval, argument_token.interval),
-        argument: argument_token |> process_sub_token(),
-        operator: content,
-        category: :unary
-      )
-
-    generate_expression([new_token | remaining_tokens])
+  def generate_expression([%Token{type: :punctuation, data: %{category: :semicolon}} | _]) do
+    :drop
   end
 
   def generate_expression([
@@ -207,6 +166,117 @@ defmodule Origami.Parser.Js.Expression do
       )
 
     generate_expression([new_token | remaining_tokens])
+  end
+
+  def generate_expression([
+        %Token{type: group, data: %{category: :parenthesis, children: children}} = group_token
+        | remaining_tokens
+      ]) do
+    case generate_expression(children) do
+      [token] ->
+        [
+          token
+          |> Token.put(
+            :interval,
+            group_token.interval
+          )
+          | remaining_tokens
+        ]
+        |> generate_expression()
+
+      _ ->
+        [group_token |> Token.put(:error, Error.new("unexpected token")) | remaining_tokens]
+    end
+  end
+
+  # Manage assignment a = value
+  def generate_expression([
+        %Token{type: type} = identifier_token,
+        %Token{type: :operator, data: %{category: :assignment, content: content}} = operator_token
+        | remaining_tokens
+      ])
+      when type in [:store_variable, :identifier] do
+    expression_token =
+      Token.new(
+        :expression,
+        Interval.merge(identifier_token.interval, operator_token.interval),
+        left: identifier_token,
+        operator: content,
+        category: :assignment
+      )
+
+    merge_operand_token(
+      expression_token,
+      generate_expression(remaining_tokens),
+      :right
+    )
+  end
+
+  # Manage arithmetic/logical operations
+  def generate_expression([
+        %Token{type: left_type} = left_token,
+        %Token{type: :operator, data: %{category: operator_category, content: content}} =
+          operator_token
+        | remaining_tokens
+      ])
+      when operator_category in [:arithmetic, :bitwise, :comparison] or
+             (content in ["&&", "||"] and is_operand_type(left_type)) do
+    expression_token =
+      Token.new(
+        :expression,
+        Interval.merge(left_token.interval, operator_token.interval),
+        left: left_token,
+        operator: content,
+        category: operator_category
+      )
+
+    merge_operand_token(
+      expression_token,
+      remaining_tokens,
+      :right
+    )
+  end
+
+  def generate_expression([
+        %Token{type: :identifier} = identifier_token,
+        %Token{type: :group, data: %{category: :parenthesis}} = arguments_token
+        | remaining_tokens
+      ]) do
+    arguments =
+      Token.get(arguments_token, :children, [])
+      |> Js.rearrange_tokens()
+      |> process_arguments()
+
+    new_token =
+      Token.new(
+        :expression,
+        Interval.merge(identifier_token.interval, arguments_token.interval),
+        callee: identifier_token,
+        arguments: arguments,
+        category: :call
+      )
+
+    generate_expression([new_token | remaining_tokens])
+  end
+
+  def generate_expression([
+        %Token{type: :operator, data: %{content: content}} = operator_token
+        | remaining_tokens
+      ])
+      when content in ["!", "+"] do
+    expression_token =
+      Token.new(
+        :expression,
+        operator_token.interval,
+        operator: content,
+        category: :unary
+      )
+
+    merge_operand_token(
+      expression_token,
+      remaining_tokens,
+      :argument
+    )
   end
 
   defp error_on_condition(expression_token, tokens) do

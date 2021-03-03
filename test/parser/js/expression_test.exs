@@ -337,6 +337,77 @@ defmodule Origami.Parser.Js.ExpressionTest do
     assert expectation == children
   end
 
+  test "check if mixed unary and update expressions are parsed" do
+    expression = "a && !(b + c) || ++a"
+
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 19),
+        category: :logical,
+        left:
+          Token.new(
+            :expression,
+            Interval.new(0, 0, 0, 12),
+            category: :logical,
+            operator: "&&",
+            left:
+              Token.new(
+                :identifier,
+                Interval.new(0, 0, 0, 0),
+                name: "a"
+              ),
+            right:
+              Token.new(
+                :expression,
+                Interval.new(0, 5, 0, 12),
+                category: :unary,
+                operator: "!",
+                argument:
+                  Token.new(
+                    :expression,
+                    Interval.new(0, 6, 0, 12),
+                    category: :arithmetic,
+                    operator: "+",
+                    left:
+                      Token.new(
+                        :identifier,
+                        Interval.new(0, 7, 0, 7),
+                        name: "b"
+                      ),
+                    right:
+                      Token.new(
+                        :identifier,
+                        Interval.new(0, 11, 0, 11),
+                        name: "c"
+                      )
+                  )
+              )
+          ),
+        right:
+          Token.new(
+            :expression,
+            Interval.new(0, 17, 0, 19),
+            category: :update,
+            operator: "++",
+            prefix: true,
+            argument:
+              Token.new(
+                :identifier,
+                Interval.new(0, 19, 0, 19),
+                name: "a"
+              )
+          ),
+        operator: "||"
+      )
+    ]
+
+    assert expectation == children
+  end
+
   test "check if update expression is parsed (prefix=true)" do
     expression = "--a"
 
