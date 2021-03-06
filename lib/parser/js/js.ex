@@ -18,6 +18,18 @@ defmodule Origami.Parser.Js do
     stop_line == start_line && stop_col + 1 == start_col
   end
 
+  @spec same_line?(list(Token.t())) :: bool
+  def same_line?([]), do: false
+
+  def same_line?([_ | []]), do: false
+
+  def same_line?([
+        %Token{interval: {_, _, stop_line, _}}
+        | [%Token{interval: {start_line, _, _, _}} | _]
+      ]) do
+    stop_line == start_line
+  end
+
   def end_line?([]), do: true
 
   def end_line?([_ | []]), do: true

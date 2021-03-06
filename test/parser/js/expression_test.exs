@@ -432,4 +432,14 @@ defmodule Origami.Parser.Js.ExpressionTest do
 
     assert expectation == children
   end
+
+  test "check if parsing 2 sucessive expressions fails" do
+    expression = "1 + 1 a"
+    {:error, [error]} = Parser.parse(expression, Js)
+    assert Error.new("unexpected token", interval: Interval.new(0, 6, 0, 6)) == error
+
+    expression = "1 + 1 1 / 1"
+    {:error, [error]} = Parser.parse(expression, Js)
+    assert Error.new("unexpected token", interval: Interval.new(0, 6, 0, 6)) == error
+  end
 end

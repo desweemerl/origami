@@ -126,8 +126,12 @@ defmodule Origami.Parser.Js.Expression do
     end
   end
 
-  def generate_expression([%Token{type: :punctuation, data: %{category: :semicolon}} | _]) do
-    :drop
+  def generate_expression([
+        %Token{data: %{error: error}} = error_token,
+        next_tokens | remaining_tokens
+      ])
+      when not is_nil(error) do
+    [error_token, next_tokens | remaining_tokens]
   end
 
   def generate_expression([
@@ -364,6 +368,34 @@ defmodule Origami.Parser.Js.Expression do
       )
 
     generate_expression([new_token | remaining_tokens])
+  end
+
+  def generate_expression([
+        %Token{type: :expression} = expression_token,
+        %Token{type: type} = next_token
+        | remaining_tokens
+      ]) do
+    case next_token do
+      %Token{type: :punctuation, data: %{category: :semicolon}} ->
+        [expression_token, next_token | remaining_tokens]
+
+      %Token{type: :operator, data: %{category: category}}
+      when category != :assignment ->
+        [expression_token, next_token | remaining_tokens]
+
+      _ ->
+        if Js.same_line?([expression_token, next_token]) do
+          error = Error.new("unexpected token")
+
+          [
+            expression_token,
+            Token.put(next_token, :error, error)
+            | remaining_tokens
+          ]
+        else
+          [expression_token, next_token | remaining_tokens]
+        end
+    end
   end
 
   def generate_expression(tokens), do: tokens
