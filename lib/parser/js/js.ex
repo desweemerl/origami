@@ -97,9 +97,33 @@ defmodule Origami.Parser.Js.Root do
   @moduledoc false
 
   alias Origami.Parser
-  alias Origami.Parser.{Error, Js, Token}
+  alias Origami.Parser.{Error, Interval, Js, Token}
 
   @behaviour Parser
+
+  @impl Parser
+  def rearrange([%Token{type: :root, data: %{children: children}} = root_token]) do
+    case children do
+      [] ->
+        [root_token]
+
+      [first_child | []] ->
+        [
+          root_token
+          |> Token.put(:interval, first_child.interval)
+          |> Token.put(:children, Js.rearrange_tokens(children))
+        ]
+
+      [first_child | _] ->
+        last_child = Token.last_child(root_token)
+
+        [
+          root_token
+          |> Token.put(:interval, Interval.merge(first_child.interval, last_child.interval))
+          |> Token.put(:children, Js.rearrange_tokens(children))
+        ]
+    end
+  end
 
   @impl Parser
   def rearrange([token | next_tokens] = tokens) do
