@@ -248,7 +248,7 @@ defmodule Origami.Parser.Js.Expression do
       ]) do
     arguments =
       Token.get(arguments_token, :children, [])
-      |> Js.rearrange_tokens()
+      |> generate_expression()
       |> process_arguments()
 
     new_token =
@@ -283,21 +283,26 @@ defmodule Origami.Parser.Js.Expression do
     )
   end
 
-  defp error_on_condition(expression_token, tokens) do
+  defp error_on_token(
+         expression_token,
+         tokens,
+         missing_error_msg,
+         error_msg \\ "unexpected_token"
+       ) do
     case tokens do
       [token | next_tokens] ->
         [
           Token.put(
             expression_token,
             :error,
-            Error.new("unexpected token", interval: token.interval)
+            Error.new(error_msg, interval: token.interval)
           )
           | next_tokens
         ]
 
       [] ->
         [
-          Token.put(expression_token, :error, Error.new("missing consequent token"))
+          Token.put(expression_token, :error, Error.new(missing_error_msg))
         ]
     end
   end
@@ -320,7 +325,7 @@ defmodule Origami.Parser.Js.Expression do
         ]
 
       tokens ->
-        error_on_condition(expression_token, tokens)
+        error_on_token(expression_token, tokens, "missing alternate token")
     end
   end
 
@@ -347,7 +352,7 @@ defmodule Origami.Parser.Js.Expression do
         |> generate_expression()
 
       tokens ->
-        error_on_condition(expression_token, tokens)
+        error_on_token(expression_token, tokens, "missing consequent token")
     end
   end
 
@@ -376,7 +381,7 @@ defmodule Origami.Parser.Js.Expression do
         | remaining_tokens
       ]) do
     case next_token do
-      %Token{type: :punctuation, data: %{category: :semicolon}} ->
+      %Token{type: :punctuation} ->
         [expression_token, next_token | remaining_tokens]
 
       %Token{type: :operator, data: %{category: category}}
@@ -401,7 +406,75 @@ defmodule Origami.Parser.Js.Expression do
   def generate_expression(tokens), do: tokens
 
   @impl Parser
-  def rearrange(tokens), do: generate_expression(tokens)
+  def rearrange(tokens, %Token{type: :expression, data: %{sequence: sequence}} = sequence_token) do
+    case tokens do
+      [
+        %Token{type: type} = operand_token
+        | remaining_tokens
+      ]
+      when is_operand_type(type) ->
+        new_sequence_token =
+          sequence_token
+          |> Token.put(:interval, Interval.merge(sequence_token.interval, operand_token.interval))
+          |> Token.put(:sequence, sequence ++ [operand_token])
+
+        rearrange(remaining_tokens, new_sequence_token)
+
+      [
+        %Token{type: :punctuation, data: %{category: :comma}} = punctuation_token
+        | remaining_tokens
+      ] ->
+        case generate_expression(remaining_tokens) do
+          [%Token{type: :punctuation, data: %{category: :semicolon}} | next_tokens] ->
+            error_token = punctuation_token |> Token.put(:error, Error.new("unexpected token"))
+            [sequence_token, error_token | next_tokens]
+
+          [] ->
+            error_token = punctuation_token |> Token.put(:error, Error.new("unexpected token"))
+            [sequence_token, error_token]
+
+          [%Token{type: :punctuation, data: %{category: :semicolon}} | tail] = next_tokens ->
+            sequence_token
+            |> Token.put(
+              :interval,
+              Interval.merge(sequence_token.interval, punctuation_token.interval)
+            )
+            |> Token.put(:error, Error.new("unexpected token"))
+
+            [sequence_token | next_tokens]
+
+          next_tokens ->
+            rearrange(next_tokens, sequence_token)
+        end
+
+      remaining_tokens ->
+        [sequence_token | remaining_tokens]
+    end
+  end
+
+  @impl Parser
+  def rearrange(tokens) do
+    case generate_expression(tokens) do
+      [
+        %Token{type: type} = operand_token,
+        %Token{type: :punctuation, data: %{category: :comma}} = punctuation_token
+        | remaining_tokens
+      ]
+      when is_operand_type(type) ->
+        sequence_token =
+          Token.new(
+            :expression,
+            Interval.merge(operand_token.interval, operand_token.interval),
+            sequence: [operand_token]
+          )
+
+        generate_expression(remaining_tokens)
+        |> rearrange(sequence_token)
+
+      next_tokens ->
+        next_tokens
+    end
+  end
 
   @impl Parser
   def check(%Token{type: :expression} = token) do
@@ -410,6 +483,7 @@ defmodule Origami.Parser.Js.Expression do
     |> Enum.concat(Token.get(token, :right) |> Js.check_token())
     |> Enum.concat(Token.get(token, :arguments, []) |> Js.check_tokens())
     |> Enum.concat(Token.get(token, :argument) |> Js.check_token())
+    |> Enum.concat(Token.get(token, :sequence, []) |> Js.check_tokens())
   end
 
   @impl Parser

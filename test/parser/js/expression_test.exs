@@ -442,4 +442,47 @@ defmodule Origami.Parser.Js.ExpressionTest do
     {:error, [error]} = Parser.parse(expression, Js)
     assert Error.new("unexpected token", interval: Interval.new(0, 6, 0, 6)) == error
   end
+
+  test "check if sequence expression is parsed" do
+    expression = "a + 1, b = 2"
+    {:ok, token} = Parser.parse(expression, Js)
+    children = Token.get(token, :children)
+
+    expectation = [
+      Token.new(
+        :expression,
+        Interval.new(0, 0, 0, 11),
+        sequence: [
+          Token.new(
+            :expression,
+            Interval.new(0, 0, 0, 4),
+            category: :arithmetic,
+            operator: "+",
+            left: Token.new(:identifier, Interval.new(0, 0, 0, 0), name: "a"),
+            right: Token.new(:number, Interval.new(0, 4, 0, 4), category: :integer, value: "1")
+          ),
+          Token.new(
+            :expression,
+            Interval.new(0, 7, 0, 11),
+            category: :assignment,
+            operator: "=",
+            left: Token.new(:identifier, Interval.new(0, 7, 0, 7), name: "b"),
+            right: Token.new(:number, Interval.new(0, 11, 0, 11), category: :integer, value: "2")
+          )
+        ]
+      )
+    ]
+
+    assert expectation == children
+  end
+
+  test "check if parsing sequence with missing operand fails" do
+    expression = "a + 1, b = 2,"
+    {:error, [error]} = Parser.parse(expression, Js)
+    assert Error.new("unexpected token", interval: Interval.new(0, 12, 0, 12)) == error
+
+    expression = "a + 1, b = 2,; c = 2"
+    {:error, [error]} = Parser.parse(expression, Js)
+    assert Error.new("unexpected token", interval: Interval.new(0, 12, 0, 12)) == error
+  end
 end

@@ -155,25 +155,26 @@ defmodule Origami.Parser.Js.Number do
   end
 
   @impl Parser
-  def rearrange([%Token{type: :number} | [%Token{type: type} | _]] = tokens)
-      when type in [:operator, :punctuation] do
-    tokens
+  def rearrange([%Token{type: :number} = number_token, %Token{type: :punctuation} | next_tokens]) do
+    [number_token | next_tokens]
   end
 
   @impl Parser
   def rearrange([%Token{type: :number} = token | next_tokens] = tokens) do
-    if Js.glued?(tokens) do
-      [next_token | remaining_tokens] = next_tokens
+    cond do
+      is_nil(Token.get(token, :error)) && (Js.glued?(tokens) || Js.same_line?(tokens)) ->
+        [next_token | remaining_tokens] = next_tokens
 
-      [
-        token
-        | [
-            Token.put(next_token, :error, Error.new("Unexpected token"))
-            | remaining_tokens
-          ]
-      ]
-    else
-      tokens
+        [
+          token
+          | [
+              Token.put(next_token, :error, Error.new("Unexpected token"))
+              | remaining_tokens
+            ]
+        ]
+
+      true ->
+        tokens
     end
   end
 

@@ -57,9 +57,9 @@ defmodule Origami.Parser.Js do
     [
       Origami.Parser.Js.Root,
       Origami.Parser.Js.Number,
+      Origami.Parser.Js.Function,
       Origami.Parser.Js.Expression,
       Origami.Parser.Js.Declaration,
-      Origami.Parser.Js.Function,
       Origami.Parser.Js.Punctuation
     ]
   end
