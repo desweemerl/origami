@@ -161,20 +161,18 @@ defmodule Origami.Parser.Js.Number do
 
   @impl Parser
   def rearrange([%Token{type: :number} = token | next_tokens] = tokens) do
-    cond do
-      is_nil(Token.get(token, :error)) && (Js.glued?(tokens) || Js.same_line?(tokens)) ->
-        [next_token | remaining_tokens] = next_tokens
+    if is_nil(Token.get(token, :error)) && (Js.glued?(tokens) || Js.same_line?(tokens)) do
+      [next_token | remaining_tokens] = next_tokens
 
-        [
-          token
-          | [
-              Token.put(next_token, :error, Error.new("Unexpected token"))
-              | remaining_tokens
-            ]
-        ]
-
-      true ->
-        tokens
+      [
+        token
+        | [
+            Token.put(next_token, :error, Error.new("Unexpected token"))
+            | remaining_tokens
+          ]
+      ]
+    else
+      tokens
     end
   end
 
