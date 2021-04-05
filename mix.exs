@@ -40,7 +40,8 @@ defmodule Origami.MixProject do
       {:file_system, "~> 0.2.9"},
       {:excoveralls, "~> 0.13"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:origami_parser, git: "https://github.com/desweemerl/origami_parser.git", branch: "master"}
     ]
   end
 end
